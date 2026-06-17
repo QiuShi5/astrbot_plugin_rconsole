@@ -1,0 +1,36 @@
+{
+  "checks": [],
+  "real_astrbot_api": true,
+  "component_signatures": {
+    "Plain": {
+      "constructor": "(text: str, convert: bool = True, *, type: astrbot.core.message.components.ComponentType = <ComponentType.Plain: 'Plain'>) -> None"
+    },
+    "Image": {
+      "constructor": "(file: str | None, *, type: astrbot.core.message.components.ComponentType = <ComponentType.Image: 'Image'>, subType: int | None = 0, url: str | None = '', cache: bool | None = True, id: int | None = 40000, c: int | None = 2, path: str | None = '', file_unique: str | None = '') -> None",
+      "fromURL": "(url: str, **_)",
+      "fromFileSystem": "(path, **_)"
+    },
+    "Record": {
+      "constructor": "(file: str | None, *, type: astrbot.core.message.components.ComponentType = <ComponentType.Record: 'Record'>, magic: bool | None = False, url: str | None = '', cache: bool | None = True, proxy: bool | None = True, timeout: int | None = 0, path: str | None = None) -> None",
+      "fromURL": "(url: str, **_)",
+      "fromFileSystem": "(path, **_)"
+    },
+    "Video": {
+      "constructor": "(file: str, *, type: astrbot.core.message.components.ComponentType = <ComponentType.Video: 'Video'>, cover: str | None = '', c: int | None = 2, path: str | None = '') -> None",
+      "fromURL": "(url: str, **_)",
+      "fromFileSystem": "(path, **_)"
+    },
+    "File": {
+      "constructor": "(name: str, file: str = '', url: str = '') -> None"
+    }
+  },
+  "component_construction": [
+    "Plain",
+    "Image",
+    "Record",
+    "Video",
+    "File"
+  ],
+  "context_signature": "(event_queue: asyncio.queues.Queue, config: astrbot.core.config.astrbot_config.AstrBotConfig, db: astrbot.core.db.BaseDatabase, provider_manager: astrbot.core.provider.manager.ProviderManager, platform_manager: astrbot.core.platform.manager.PlatformManager, conversation_manager: astrbot.core.conversation_mgr.ConversationManager, message_history_manager: astrbot.core.platform_message_history_mgr.PlatformMessageHistoryManager, persona_manager: astrbot.core.persona_mgr.PersonaManager, astrbot_config_mgr: astrbot.core.astrbot_config_mgr.AstrBotConfigManager, knowledge_base_manager: astrbot.core.knowledge_base.kb_mgr.KnowledgeBaseManager, cron_manager: astrbot.core.cron.manager.CronJobManager, subagent_orchestrator: astrbot.core.subagent_orchestrator.SubAgentOrchestrator | None = None)",
+  "adapter_runtime_requirement": "真实发送需要运行中的 AstrBot Context、平台管理器、消息适配器和账号配置；沙箱仅能验证组件 API 与构造兼容。"
+}

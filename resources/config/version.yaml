@@ -1,0 +1,24 @@
+- {
+  version: 1.14.5.14,
+  data:
+    [
+      <span class="cmd">🎯 智能分辨率</span>,
+      新增<span class="cmd">智能分辨率开关</span>：自动获取最高可用画质，避免转为群文件上传,
+      支持<span class="cmd">全画质自动检测</span>：从8K/4K/HDR等最高画质开始评估，自动适配最佳画质,
+      优化<span class="cmd">编码选择策略</span>：优先AV1 > HEVC > AVC，兼顾画质与文件体积，B站/油管通用,
+      <span class="cmd">🎬 番剧会员解析</span>,
+      新增<span class="cmd">会员番剧下载</span>：登录大会员账号后支持下载付费番剧内容,
+      番剧<span class="cmd">独立配置策略</span>：不受文件大小限制，有独立时长限制配置,
+      <span class="cmd">🔄 重发过检测模块</span>,
+      新增<span class="cmd">媒体发送失败智能重发</span>：图片/视频被检测无法发送时，自动处理数据后重发,
+      <span class="cmd">🖼️ 图片分批发送</span>,
+      新增<span class="cmd">全局图片分批阈值</span>：超过设定数量自动分批发送，支持抖音、B站动态、小红书、微博等,
+      优化<span class="cmd">合并转发覆盖</span>：图片合并转发已全平台覆盖（抖音、B站、小红书、微博、米游社、小黑盒、最右、贴吧、TG等）,
+      新增<span class="cmd">小黑盒消息元素限制</span>：帖子单条转发消息最大元素数可配置，超过自动分条发送,
+      <span class="cmd">🎛️ 锅巴UI重构</span>,
+      重构<span class="cmd">配置界面布局</span>：按平台分组，提升配置可读性,
+      <span class="cmd">🔧 其他优化</span>,
+      优化<span class="cmd">小黑盒解析方案</span>：改进游戏资讯、动态等内容解析,
+      增强<span class="cmd">各平台解析健壮性</span>：修复部分失效小功能,
+    ],
+}

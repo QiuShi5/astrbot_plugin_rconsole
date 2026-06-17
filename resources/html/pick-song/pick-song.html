@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索歌单</title>
+    <style>
+        @import url('{{pluResPath}}html/pick-song/pick-song.css');
+    </style>
+</head>
+
+<body>
+    <div class="songList">
+        {{each songData info key}}
+        <div class="songListNav">
+            <div class="navInfo">
+                <div class="number">{{ key+1 }}</div>
+                {{ if info.cover != 'def' }}
+                <img src="{{ info.cover }}" alt="">
+                {{ else }}
+                <img src="{{pluResPath}}img/default.png" alt="">
+                {{ /if }}
+                <div class="navText">
+                    <div class="songName">{{ info.songName }}</div>
+                    <div class="singerText">{{ info.singerName }}</div>
+                </div>
+            </div>
+            {{ if info.type == 'cloud' }}
+            <div class="durationWithTag">
+                <div class="cloudBox">
+                    <div class="cloud">云盘</div>
+                </div>
+                <div class="navDuration">{{ info.duration }}</div>
+            </div>
+            {{ else if info.type == 'podcast' }}
+            <div class="durationWithTag">
+                <div class="podcastBox">
+                    <div class="podcast">播客</div>
+                </div>
+                <div class="navDuration">{{ info.duration }}</div>
+            </div>
+            {{ else }}
+            <div class="navDuration">{{ info.duration }}</div>
+            {{ /if }}
+        </div>
+        {{ /each }}
+        <div class="bgicon">
+            <img src="{{pluResPath}}img/icon/neteaseRank.png" alt="">
+        </div>
+        <div class="footer">Created By Yunzai-Bot & R-Plugin</div>
+    </div>
+</body>
+
+</html>

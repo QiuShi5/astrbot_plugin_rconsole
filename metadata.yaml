@@ -1,0 +1,14 @@
+name: astrbot_plugin_rconsole
+display_name: R插件 AstrBot版
+short_desc: R-console / R-plugin 的 AstrBot 高复刻移植版
+desc: 将 Yunzai-Bot R插件迁移到 AstrBot，复刻帮助菜单、查询、点歌、链接解析、样式资源与管理功能。
+version: v0.3.11
+author: ported-by-ai
+repo: https://gitee.com/kyrzy0416/rconsole-plugin.git
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - telegram
+  - discord
+  - satori
+astrbot_version: ">=4.14,<5"

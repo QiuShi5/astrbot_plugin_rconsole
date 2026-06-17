@@ -1,0 +1,197 @@
+{
+  "enable_link_resolvers": {
+    "description": "启用链接解析总开关",
+    "type": "bool",
+    "default": true
+  },
+  "identify_prefix": {
+    "description": "识别前缀，例如：✅ 识别：哔哩哔哩",
+    "type": "string",
+    "default": ""
+  },
+  "conversation_whitelist": {
+    "description": "对话白名单。留空表示所有对话都可触发 R 插件；可填写 unified_msg_origin、session_id、群号，支持 * 通配符。",
+    "type": "list",
+    "default": []
+  },
+  "conversation_blacklist": {
+    "description": "对话黑名单。命中的对话不会触发 R 插件；优先级高于对话白名单，支持 * 通配符。",
+    "type": "list",
+    "default": []
+  },
+  "global_black_list": {
+    "description": "全局解析黑名单，填写平台名称：抖音、哔哩哔哩、TikTok、Twitter、Acfun、小红书、波点、通用（包含快手等）、YouTube、米游社、网易云音乐、微博、微视、最右、AM+Spotify、扣扣音乐、汽水音乐、小飞机、贴吧、小黑盒、AI总结",
+    "type": "list",
+    "default": []
+  },
+  "global_image_limit": {
+    "description": "解析图片是否合并转发阈值，0 表示始终使用可用的合并/分批策略",
+    "type": "int",
+    "default": 0
+  },
+  "image_batch_threshold": {
+    "description": "全局图片分批阈值，超过此数量自动分批发送，0 表示不限制",
+    "type": "int",
+    "default": 50
+  },
+  "msg_element_limit": {
+    "description": "单条消息最大元素数量，超过后分批发送",
+    "type": "int",
+    "default": 50
+  },
+  "default_path": {
+    "description": "插件临时媒体目录。建议保持默认，实际运行时会限制在插件数据目录内",
+    "type": "string",
+    "default": "data/temp"
+  },
+  "video_size_limit": {
+    "description": "视频大小限制（MB），超过后按平台能力改为文件或降级提示",
+    "type": "int",
+    "default": 70
+  },
+  "video_download_timeout": {
+    "description": "视频下载超时（秒），大文件可适当调高。超时=下载失败，不代表文件本身有问题",
+    "type": "int",
+    "default": 60,
+    "options": [15, 30, 45, 60, 90, 120, 180, 300, 600]
+  },
+  "video_send_timeout": {
+    "description": "视频发送超时（秒），OneBot/QQ 平台原生发送超时阈值。超时=发送失败（平台可能已投递但未收到确认），不是文件传输耗时问题",
+    "type": "int",
+    "default": 30,
+    "options": [10, 15, 20, 30, 45, 60, 90, 120]
+  },
+  "proxy_addr": {
+    "description": "代理地址，用于 TikTok/Twitter/YouTube 等需要代理的平台",
+    "type": "string",
+    "default": "127.0.0.1"
+  },
+  "proxy_port": {
+    "description": "代理端口",
+    "type": "string",
+    "default": "7890"
+  },
+  "force_overseas_server": {
+    "description": "强制使用海外解析/代理策略",
+    "type": "bool",
+    "default": false
+  },
+  "video_codec": {
+    "description": "视频编码选择",
+    "type": "string",
+    "default": "auto",
+    "options": ["auto", "av1", "hevc", "avc"]
+  },
+  "queue_concurrency": {
+    "description": "下载队列并发数",
+    "type": "int",
+    "default": 1
+  },
+  "video_download_concurrency": {
+    "description": "视频下载线程数",
+    "type": "int",
+    "default": 1
+  },
+  "autoclear_cron": {
+    "description": "自动清理时间，沿用 R 插件 cron 语义；AstrBot 版后续实现定时器时读取",
+    "type": "string",
+    "default": "0 0 8 * * ?"
+  },
+  "bilibili": {
+    "description": "哔哩哔哩配置",
+    "type": "object",
+    "items": {
+      "sessdata": {"description": "哔哩哔哩 SESSDATA（敏感 Cookie）", "type": "string", "default": ""},
+      "qr_auto_poll": {"description": "#rbq 扫码登录后自动轮询并回调成功/失败/超时结果", "type": "bool", "default": true},
+      "qr_poll_interval": {"description": "#rbq 自动查询间隔（秒，1-30）", "type": "int", "default": 3},
+      "qr_poll_timeout": {"description": "#rbq 自动查询超时（秒，30-600）", "type": "int", "default": 180},
+      "duration": {"description": "普通视频最大解析时长（秒）", "type": "int", "default": 480},
+      "display_source_link": {"description": "解析文案是否显示原始链接", "type": "bool", "default": false},
+      "display_cover": {"description": "是否显示封面", "type": "bool", "default": true},
+      "display_info": {"description": "是否显示视频信息", "type": "bool", "default": true},
+      "display_intro": {"description": "是否显示简介", "type": "bool", "default": true},
+      "display_online": {"description": "是否显示在线人数", "type": "bool", "default": true},
+      "display_summary": {"description": "是否显示 AI 总结", "type": "bool", "default": false},
+      "use_bbdown": {"description": "是否使用 BBDown 接管下载", "type": "bool", "default": false},
+      "download_method": {"description": "下载方式：0 原生，1 Aria2，2 axel/wget", "type": "int", "default": 0, "options": [0, 1, 2]},
+      "resolution": {"description": "最高分辨率序号（0=8K, 5=1080P+, 10=360P），沿用原插件 BILI_RESOLUTION_LIST", "type": "int", "default": 5, "options": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+      "bangumi_direct": {"description": "番剧直接解析开关", "type": "bool", "default": false},
+      "bangumi_resolution": {"description": "番剧独立画质（0=8K ~ 10=360P）", "type": "int", "default": 5, "options": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+      "bangumi_duration": {"description": "番剧最大时长（秒）", "type": "int", "default": 1800},
+      "smart_resolution": {"description": "智能分辨率", "type": "bool", "default": false},
+      "file_size_limit": {"description": "智能分辨率文件大小限制 MB", "type": "int", "default": 100},
+      "min_resolution": {"description": "智能分辨率最低画质（0=8K ~ 10=360P）", "type": "int", "default": 10, "options": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+    }
+  },
+  "netease": {
+    "description": "网易云音乐配置",
+    "type": "object",
+    "items": {
+      "use_local_api": {"description": "是否使用自建 API", "type": "bool", "default": false},
+      "enable_song_request": {"description": "是否开启网易云点歌功能", "type": "bool", "default": false},
+      "send_vocal": {"description": "是否发送群语音", "type": "bool", "default": true},
+      "song_request_max_list": {"description": "点歌列表最大数量", "type": "int", "default": 10},
+      "cookie": {"description": "网易云 Cookie", "type": "text", "default": ""},
+      "cloud_cookie": {"description": "网易云云盘 Cookie", "type": "text", "default": ""},
+      "cloud_api_server": {"description": "自建 API 服务地址", "type": "string", "default": ""},
+      "audio_quality": {"description": "音质", "type": "string", "default": "exhigh", "options": ["standard", "higher", "exhigh", "lossless", "hires", "jyeffect", "sky", "dolby", "jymaster"]},
+      "user_id": {"description": "网易云用户 ID", "type": "string", "default": ""},
+      "cloud_user_id": {"description": "网易云云盘用户 ID", "type": "string", "default": ""}
+    }
+  },
+  "douyin": {
+    "description": "抖音配置",
+    "type": "object",
+    "items": {
+      "cookie": {"description": "抖音 Cookie", "type": "text", "default": ""},
+      "duration": {"description": "最大视频时长（秒）", "type": "int", "default": 480},
+      "display_source_link": {"description": "解析文案是否显示原始链接", "type": "bool", "default": false},
+      "compression": {"description": "是否使用压缩视频格式", "type": "bool", "default": true},
+      "display_cover": {"description": "是否显示封面", "type": "bool", "default": true},
+      "comments": {"description": "是否显示评论", "type": "bool", "default": false},
+      "music": {"description": "是否解析背景音乐", "type": "bool", "default": true},
+      "bgm_send_type": {"description": "BGM 发送方式", "type": "string", "default": "voice", "options": ["voice", "card"]}
+    }
+  },
+  "youtube": {
+    "description": "YouTube 配置",
+    "type": "object",
+    "items": {
+      "graphics_options": {"description": "下载画质高度（0=最高, 4320=8K, 2160=4K, 1080=1080P, 720=720P, 480=480P, 360=360P）", "type": "int", "default": 720, "options": [0, 4320, 2160, 1440, 1080, 720, 480, 360]},
+      "display_source_link": {"description": "解析文案是否显示原始链接", "type": "bool", "default": false},
+      "clip_time": {"description": "截取时长（秒），0 不截取", "type": "int", "default": 0},
+      "duration": {"description": "最大解析时长（秒）", "type": "int", "default": 480},
+      "cookie_path": {"description": "YouTube Cookie.txt 路径", "type": "string", "default": ""}
+    }
+  },
+  "cookies": {
+    "description": "其他平台 Cookie / API 配置",
+    "type": "object",
+    "items": {
+      "xiaohongshu": {"description": "小红书 Cookie", "type": "text", "default": ""},
+      "xiaohongshu_display_source_link": {"description": "小红书解析文案是否显示原始链接", "type": "bool", "default": false},
+      "weibo": {"description": "微博 Cookie", "type": "text", "default": ""},
+      "weibo_display_source_link": {"description": "微博解析文案是否显示原始链接", "type": "bool", "default": false},
+      "weibo_comments": {"description": "是否显示微博评论", "type": "bool", "default": true},
+      "xiaoheihe": {"description": "小黑盒 Cookie", "type": "text", "default": ""},
+      "xiaoheihe_display_source_link": {"description": "小黑盒解析文案是否显示原始链接", "type": "bool", "default": false}
+    }
+  },
+  "ai": {
+    "description": "AI 总结/识图配置",
+    "type": "object",
+    "items": {
+      "base_url": {"description": "OpenAI-compatible API Base URL", "type": "string", "default": ""},
+      "api_key": {"description": "API Key", "type": "text", "default": ""},
+      "model": {"description": "模型名", "type": "string", "default": "moonshot-v1-8k"}
+    }
+  },
+  "ytdlp": {
+    "description": "yt-dlp 通用媒体解析/下载配置，用于 YouTube/TikTok/Twitter/X/B站/AcFun/通用视频站等平台",
+    "type": "object",
+    "items": {
+      "mode": {"description": "处理模式：off 关闭，metadata 仅信息，direct 提取直链，download 下载到插件临时目录", "type": "string", "default": "direct", "options": ["off", "metadata", "direct", "download"]},
+      "enabled": {"description": "启用 yt-dlp 解析链。安装 requirements 后默认可用", "type": "bool", "default": true}
+    }
+  }
+}

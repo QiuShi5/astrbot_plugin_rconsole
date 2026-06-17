@@ -1,0 +1,26 @@
+{
+  "help_original_width": 788,
+  "help_scale": 1.5,
+  "help_render_width": 1182,
+  "version_original_width": 536,
+  "version_scale": 1.5,
+  "version_render_width": 804,
+  "pick_song_dark_background": "#121212",
+  "accent_color": "#FFBD73",
+  "font": "FZB.ttf",
+  "icons_preserved_count": 30,
+  "rendered_sizes": {
+    "help": [
+      1182,
+      2216
+    ],
+    "version": [
+      804,
+      910
+    ],
+    "pick_song": [
+      1000,
+      492
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.DS_Store
+.env
+.env.*
+data/state.json
+data/whitelist.json
+data/song_search_cache.json
+data/cloud_song_cache.json
+data/temp/
+data/rendered/

@@ -5,7 +5,7 @@
 本轮针对 grader 指出的“缺少完整原 R 插件功能清单映射”补齐了自动生成矩阵和可执行验证：
 
 - 原 R 插件 `apps/*.js` 中 `reg:` 入口：47 条；
-- AstrBot 版 `_build_rules()` 映射：47 条；
+- AstrBot 版 `_build_rules()` 实现：46 条（第 47 条 `update` 入口已按产品要求移除，parity 矩阵保留其历史对照）；
 - 自动矩阵生成：通过；
 - 平台无关/可工具链实现功能：已实现并有测试或代码路径证据；
 - 环境依赖功能：9 条，均保留入口、权限、配置、诊断能力，不在沙箱伪造成功。
@@ -14,7 +14,7 @@
 
 | 文件 | 作用 |
 |---|---|
-| `docs/full_original_to_astrbot_parity_matrix.md` | 47 条原始正则到 AstrBot handler 的完整矩阵 |
+| `docs/full_original_to_astrbot_parity_matrix.md` | 47 条原始正则到 AstrBot handler 的完整矩阵（46 条已实现 + update 入口按策略移除的历史对照） |
 | `docs/full_original_to_astrbot_parity_matrix.json` | 同上，机器可读版本 |
 | `docs/visual_comparison_report.md` | 样式 token、尺寸、字体、图标量化对比 |
 | `docs/style_quantitative_check.json` | 样式量化检查输出 |

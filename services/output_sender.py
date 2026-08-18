@@ -88,9 +88,7 @@ class OutputSender:
         lines = []
         for index, line in enumerate(raw_lines):
             if re.match(r"^\s*(?:原)?链接\s*[:：]\s*https?://", line):
-                context = "\n".join(
-                    raw_lines[max(0, index - 1) : min(len(raw_lines), index + 2)]
-                )
+                context = "\n".join(raw_lines[max(0, index - 1) : min(len(raw_lines), index + 2)])
                 if self._source_link_context_is_failure(context):
                     lines.append(line)
                 continue
@@ -99,7 +97,9 @@ class OutputSender:
 
     def _source_link_context_is_failure(self, context: str) -> bool:
         marker = str(context or "").lower()
-        return any(token in marker for token in ("解析失败", "读取失败", "展开失败", "缺少必要信息", "未找到", "无法", "失败"))
+        return any(
+            token in marker for token in ("解析失败", "读取失败", "展开失败", "缺少必要信息", "未找到", "无法", "失败")
+        )
 
     async def _localize_remote_videos(self, output: ROutput, rule_name: str) -> None:
         if not output.videos:
@@ -259,7 +259,9 @@ class OutputSender:
             logger.warning(f"R插件统一发送模块：视频组件发送失败，降级为文本：{exc}")
         await event.send(event.plain_result(f"[视频] {source}"))
 
-    async def _send_component_segment(self, event: AstrMessageEvent, label: str, source: str, factory, *, text_fallback: bool = True) -> None:
+    async def _send_component_segment(
+        self, event: AstrMessageEvent, label: str, source: str, factory, *, text_fallback: bool = True
+    ) -> None:
         if Comp is not None:
             try:
                 component = factory(source)

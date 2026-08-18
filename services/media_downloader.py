@@ -29,6 +29,7 @@ class YtDlpService:
     def available(self) -> tuple[bool, str]:
         try:
             import yt_dlp  # noqa: F401
+
             return True, "python-package"
         except Exception:
             pass
@@ -42,10 +43,12 @@ class YtDlpService:
             return ROutput(text=f"✅ 识别：{platform or '通用媒体'}\n链接：{url}\nyt-dlp 解析链已在配置中关闭。")
         ok, backend = self.available()
         if not ok:
-            return ROutput(text=(
-                f"✅ 识别：{platform or '通用媒体'}\n链接：{url}\n"
-                "未检测到 yt-dlp。已保留完整媒体解析/下载链入口；安装依赖 `pip install yt-dlp` 后可自动提取标题、封面、直链并按配置下载。"
-            ))
+            return ROutput(
+                text=(
+                    f"✅ 识别：{platform or '通用媒体'}\n链接：{url}\n"
+                    "未检测到 yt-dlp。已保留完整媒体解析/下载链入口；安装依赖 `pip install yt-dlp` 后可自动提取标题、封面、直链并按配置下载。"
+                )
+            )
         try:
             if backend == "python-package":
                 info = await asyncio.to_thread(self._extract_python, url)
@@ -70,12 +73,14 @@ class YtDlpService:
         if self.proxy:
             opts["proxy"] = self.proxy
         if download and outtmpl:
-            opts.update({
-                "skip_download": False,
-                "outtmpl": outtmpl,
-                "merge_output_format": "mp4",
-                "overwrites": True,
-            })
+            opts.update(
+                {
+                    "skip_download": False,
+                    "outtmpl": outtmpl,
+                    "merge_output_format": "mp4",
+                    "overwrites": True,
+                }
+            )
         return opts
 
     def _extract_python(self, url: str) -> dict[str, Any]:
@@ -150,7 +155,9 @@ class YtDlpService:
                     except Exception as exc:
                         lines.append(f"下载失败：{exc}")
                 else:
-                    lines.append("当前仅检测到 yt-dlp CLI，AstrBot 版默认不在后台 shell 下载；请安装 Python 包 `yt-dlp` 启用内置下载。")
+                    lines.append(
+                        "当前仅检测到 yt-dlp CLI，AstrBot 版默认不在后台 shell 下载；请安装 Python 包 `yt-dlp` 启用内置下载。"
+                    )
 
         return ROutput(text="\n".join(lines), images=images, videos=videos, files=files)
 
@@ -167,7 +174,11 @@ class YtDlpService:
         size = info.get("filesize") or info.get("filesize_approx")
         if not size:
             formats = info.get("formats") or []
-            candidates = [f.get("filesize") or f.get("filesize_approx") for f in formats if f.get("filesize") or f.get("filesize_approx")]
+            candidates = [
+                f.get("filesize") or f.get("filesize_approx")
+                for f in formats
+                if f.get("filesize") or f.get("filesize_approx")
+            ]
             size = max(candidates) if candidates else 0
         try:
             return float(size or 0) / 1024 / 1024

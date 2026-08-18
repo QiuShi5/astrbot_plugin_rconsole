@@ -72,7 +72,9 @@ class BilibiliAuthService:
             saved.update({"cookies": cookies, "sessdata": sessdata, "login_at": int(time.time()), "last_poll": payload})
             write_json(self.auth_path, saved)
             hint = "已保存到插件 data/bilibili_auth.json。"
-            return ROutput(text=f"B站扫码登录成功。{hint}\nCookie 字段：{', '.join(cookies.keys()) or '未捕获到 Cookie'}")
+            return ROutput(
+                text=f"B站扫码登录成功。{hint}\nCookie 字段：{', '.join(cookies.keys()) or '未捕获到 Cookie'}"
+            )
         status_map = {
             86038: "二维码已失效，请重新发送 #rbq。",
             86090: "已扫码，等待在手机端确认。",
@@ -86,11 +88,15 @@ class BilibiliAuthService:
         if configured_sessdata:
             return ROutput(text="B站登录状态：已在插件配置中检测到 bilibili.sessdata。")
         if saved:
-            return ROutput(text="B站登录状态：已通过 #rbq/#rbs 保存过 SESSDATA 到插件 data/bilibili_auth.json；建议同步到插件配置 bilibili.sessdata。")
+            return ROutput(
+                text="B站登录状态：已通过 #rbq/#rbs 保存过 SESSDATA 到插件 data/bilibili_auth.json；建议同步到插件配置 bilibili.sessdata。"
+            )
         return ROutput(text="B站登录状态：未检测到 SESSDATA。发送 #rbq 生成二维码，扫码确认后发送 #rbs 查询状态。")
 
     def _request_json(self, url: str) -> dict[str, Any]:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 AstrBot-RConsole", "Accept": "application/json"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0 AstrBot-RConsole", "Accept": "application/json"}
+        )
         with urllib.request.urlopen(req, timeout=15) as resp:
             return json.loads(resp.read().decode("utf-8", errors="replace"))
 
@@ -98,7 +104,9 @@ class BilibiliAuthService:
         jar = CookieJar()
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
         url = POLL_API + "?" + urllib.parse.urlencode({"qrcode_key": key})
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 AstrBot-RConsole", "Accept": "application/json"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0 AstrBot-RConsole", "Accept": "application/json"}
+        )
         with opener.open(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8", errors="replace"))
         cookies = {cookie.name: cookie.value for cookie in jar}
@@ -116,4 +124,3 @@ class BilibiliAuthService:
         img = qr.make_image(fill_color="black", back_color="white")
         img.save(path)
         return str(path)
-

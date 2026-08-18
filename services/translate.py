@@ -23,8 +23,11 @@ class TranslateService:
         if not text:
             return ROutput(text="请输入要翻译的文本，或回复一条消息后使用翻中/英/日/韩/俄。")
         target = LANG_MAP[lang_key]
-        # Public fallback endpoint. R-plugin used a custom Translate strategy; this port keeps the same user-facing command.
-        url = "https://api.mymemory.translated.net/get?" + urllib.parse.urlencode({"q": text, "langpair": f"auto|{target}"})
+        # Public fallback endpoint. R-plugin used a custom Translate strategy; this
+        # port keeps the same user-facing command.
+        url = "https://api.mymemory.translated.net/get?" + urllib.parse.urlencode(
+            {"q": text, "langpair": f"auto|{target}"}
+        )
         try:
             data = await request_json(url, timeout=20)
             translated = ((data or {}).get("responseData") or {}).get("translatedText")

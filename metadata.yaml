@@ -1,10 +1,24 @@
 name: astrbot_plugin_rconsole
 display_name: R插件 AstrBot版
 short_desc: R-console / R-plugin 的 AstrBot 高复刻移植版
-desc: 将 Yunzai-Bot R插件迁移到 AstrBot，复刻帮助菜单、查询、点歌、链接解析、样式资源与管理功能。
-version: v0.3.11
-author: ported-by-ai
-repo: https://gitee.com/kyrzy0416/rconsole-plugin.git
+desc: |
+  将 Yunzai-Bot R插件（R-console / R-plugin）高复刻迁移到 AstrBot。
+
+  **功能**
+  - 帮助菜单 / 版本卡片图片化渲染（Pillow 复刻原深色卡片样式）
+  - 查询：医药查询、猫图、推荐软件、买家秀、Cos 图片
+  - 翻译：翻中 / 英 / 日 / 文 / 俄 / 韩
+  - 网易云点歌：搜索列表、听序号、直接播放、播客/声音类型
+  - 链接解析：抖音、TikTok、B站、Twitter/X、AcFun、小红书、YouTube、网易云、微博、QQ音乐等 20+ 平台
+  - B站扫码登录（#rbq/#rbs，自动轮询回调并回填 SESSDATA）
+  - 管理：海外解析开关、R 信任用户白名单、清理临时目录、#R能力诊断
+
+  **安装**：复制插件目录到 `data/plugins/`，执行 `pip install -r requirements.txt`，重载插件后在配置面板填写各平台 Cookie/API 即可。
+
+  **安全**：不执行聊天内强制更新/任意删除/任意 shell；依赖账号或外部工具的能力给出明确提示与能力诊断。
+version: 0.3.11
+author: dsh
+repo: http://172.18.95.4:6610/astrbot_plugin_rconsole.git
 support_platforms:
   - aiocqhttp
   - qq_official
@@ -12,3 +26,10 @@ support_platforms:
   - discord
   - satori
 astrbot_version: ">=4.14,<5"
+social_link: https://github.com/zhiyu1998/rconsole-plugin
+tags:
+  - 解析
+  - 音乐
+  - 工具
+  - 查询
+  - 点歌

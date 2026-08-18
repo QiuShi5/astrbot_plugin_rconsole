@@ -54,10 +54,12 @@ class CardRenderer:
         if number:
             candidates.append(self.font_number)
         candidates.append(self.font_fzb)
-        candidates.extend([
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            Path("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"),
-        ])
+        candidates.extend(
+            [
+                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+                Path("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"),
+            ]
+        )
         for path in candidates:
             try:
                 if path.exists():
@@ -76,7 +78,9 @@ class CardRenderer:
             if not raw:
                 lines.append("")
             else:
-                lines.extend(textwrap.wrap(raw, width=max_chars, replace_whitespace=False, drop_whitespace=True) or [raw])
+                lines.extend(
+                    textwrap.wrap(raw, width=max_chars, replace_whitespace=False, drop_whitespace=True) or [raw]
+                )
         return lines
 
     def _rounded(self, draw, xy, radius: int, fill: str, outline: str | None = None, width: int = 1):
@@ -150,7 +154,9 @@ class CardRenderer:
                 draw.text((ix + 82, iy + 17), title[:30], fill=TEXT, font=item_font)
                 draw.text((ix + 82, iy + 54), desc[:42], fill=(210, 210, 210, 210), font=desc_font)
             y += gh + 24
-        draw.text((width // 2, height - 42), "Created By Yunzai-Bot & R-Plugin", fill="#e1d7b7", font=footer_font, anchor="ma")
+        draw.text(
+            (width // 2, height - 42), "Created By Yunzai-Bot & R-Plugin", fill="#e1d7b7", font=footer_font, anchor="ma"
+        )
         im.convert("RGB").save(path, quality=95)
         return str(path)
 
@@ -188,7 +194,9 @@ class CardRenderer:
                 cy += 34
             cy += 4
         draw.line((x + 20, height - 78, width - x - 20, height - 78), fill="#555555", width=1)
-        draw.text((width // 2, height - 50), "Created By Yunzai-Bot & R-Plugin", fill="#e1d7b7", font=footer_font, anchor="ma")
+        draw.text(
+            (width // 2, height - 50), "Created By Yunzai-Bot & R-Plugin", fill="#e1d7b7", font=footer_font, anchor="ma"
+        )
         im.convert("RGB").save(path, quality=95)
         return str(path)
 
@@ -228,7 +236,9 @@ class CardRenderer:
 
         # watermark logo
         try:
-            icon = Image.open(self.resources_dir / "img" / "icon" / "neteaseRank.png").convert("RGBA").resize((230, 230))
+            icon = (
+                Image.open(self.resources_dir / "img" / "icon" / "neteaseRank.png").convert("RGBA").resize((230, 230))
+            )
             icon.putalpha(90)
             im.alpha_composite(icon, (width // 2 - 115, height // 2 - 115))
         except Exception:
@@ -259,10 +269,20 @@ class CardRenderer:
                 color = "#dd001b" if tag == "cloud" else "#7c4dff"
                 self._rounded(draw, (dx - 18, y + 20, dx + 62, y + 52), 10, "#121212", color, 2)
                 draw.text((dx + 22, y + 24), tag_text, fill=color, font=tag_font, anchor="ma")
-                draw.text((dx + 22, y + 64), str(song.get("duration", "00:00")), fill="#aaaaaa", font=dur_font, anchor="ma")
+                draw.text(
+                    (dx + 22, y + 64), str(song.get("duration", "00:00")), fill="#aaaaaa", font=dur_font, anchor="ma"
+                )
             else:
-                draw.text((dx + 22, y + 46), str(song.get("duration", "00:00")), fill="#aaaaaa", font=dur_font, anchor="ma")
+                draw.text(
+                    (dx + 22, y + 46), str(song.get("duration", "00:00")), fill="#aaaaaa", font=dur_font, anchor="ma"
+                )
             y += row_h
-        draw.text((width // 2, height - 46), "Created By Yunzai-Bot & R-Plugin", fill=(255, 255, 255, 175), font=footer_font, anchor="ma")
+        draw.text(
+            (width // 2, height - 46),
+            "Created By Yunzai-Bot & R-Plugin",
+            fill=(255, 255, 255, 175),
+            font=footer_font,
+            anchor="ma",
+        )
         im.convert("RGB").save(path, quality=95)
         return str(path)

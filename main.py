@@ -8,7 +8,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Pattern
+from re import Pattern
 
 from astrbot.api import AstrBotConfig, logger
 from astrbot.api.event import AstrMessageEvent, filter
@@ -58,7 +58,12 @@ class RConsolePlugin(Star):
         self.translate_service = TranslateService()
         self.resolver_service = ResolverService(
             temp_dir=self.data_dir / "temp",
-            ytdlp_mode=(get_config_value(config, "ytdlp.mode", "direct") if get_config_value(config, "ytdlp.enabled", True) else "off") or "direct",
+            ytdlp_mode=(
+                get_config_value(config, "ytdlp.mode", "direct")
+                if get_config_value(config, "ytdlp.enabled", True)
+                else "off"
+            )
+            or "direct",
             max_filesize_mb=int(get_config_value(config, "video_size_limit", 70) or 70),
             proxy=self._proxy_url(),
             bilibili_sessdata=self._bilibili_sessdata(),
@@ -112,7 +117,9 @@ class RConsolePlugin(Star):
         for rule in self.rules:
             if rule.pattern.search(msg):
                 tag = self._event_tag(event)
-                logger.info(f"R插件[{tag}] 命中规则：name={rule.name} handler={rule.handler_name} source={rule.source_module}")
+                logger.info(
+                    f"R插件[{tag}] 命中规则：name={rule.name} handler={rule.handler_name} source={rule.source_module}"
+                )
                 if rule.permission == "admin" and not self._is_admin(event):
                     logger.info(f"R插件[{tag}] 权限拦截：rule={rule.name} 需要管理员")
                     await event.send(event.plain_result("您无权操作"))
@@ -131,7 +138,8 @@ class RConsolePlugin(Star):
                     output = await self._prepare_output_for_send(event, output, rule)
                     logger.info(
                         f"R插件[{tag}] 输出：rule={rule.name} text={bool(output.text)} "
-                        f"images={len(output.images)} audios={len(output.audios)} videos={len(output.videos)} files={len(output.files)} stop={output.stop}"
+                        f"images={len(output.images)} audios={len(output.audios)} "
+                        f"videos={len(output.videos)} files={len(output.files)} stop={output.stop}"
                     )
                     await self._send_output(event, output)
                     if output.stop:
@@ -200,9 +208,27 @@ class RConsolePlugin(Star):
 
     def _rule_disabled_reason(self, rule: RuleSpec) -> str:
         link_rules = {
-            "douyin", "tiktok", "bili", "twitter_x", "acfun", "xhs", "bodian", "general",
-            "youtube", "miyoushe", "netease", "weibo", "weishi", "zuiyou", "freyr", "summary",
-            "qq_music", "qishui", "aircraft", "tieba", "xiaoheihe",
+            "douyin",
+            "tiktok",
+            "bili",
+            "twitter_x",
+            "acfun",
+            "xhs",
+            "bodian",
+            "general",
+            "youtube",
+            "miyoushe",
+            "netease",
+            "weibo",
+            "weishi",
+            "zuiyou",
+            "freyr",
+            "summary",
+            "qq_music",
+            "qishui",
+            "aircraft",
+            "tieba",
+            "xiaoheihe",
         }
         if rule.name not in link_rules:
             return ""
@@ -264,7 +290,10 @@ class RConsolePlugin(Star):
             output.text = text + "\n已自动写入插件配置：bilibili.sessdata。若设置页未立即刷新，请刷新页面或重载插件。"
             logger.info(f"R插件B站SESSDATA已自动回填并持久化：{detail}")
         else:
-            output.text = text + "\n已写入当前运行时配置：bilibili.sessdata；但未找到可用的持久化保存接口，请刷新/重载后如仍为空再手动填写。"
+            output.text = (
+                text
+                + "\n已写入当前运行时配置：bilibili.sessdata；但未找到可用的持久化保存接口，请刷新/重载后如仍为空再手动填写。"
+            )
             logger.warning(f"R插件B站SESSDATA已写入运行时配置但持久化失败：{detail}")
         return output
 
@@ -341,10 +370,14 @@ class RConsolePlugin(Star):
         timeout = self._bilibili_qr_poll_timeout()
         self._bilibili_qr_poll_session = session
         token = self._bilibili_qr_poll_token
-        self._bilibili_qr_poll_task = asyncio.create_task(self._bilibili_qr_poll_loop(event, session, token, interval, timeout))
+        self._bilibili_qr_poll_task = asyncio.create_task(
+            self._bilibili_qr_poll_loop(event, session, token, interval, timeout)
+        )
         logger.info(f"R插件[{self._event_tag(event)}] B站扫码自动轮询已启动：interval={interval}s timeout={timeout}s")
 
-    async def _bilibili_qr_poll_loop(self, event: AstrMessageEvent, session: str, token: int, interval: int, timeout: int) -> None:
+    async def _bilibili_qr_poll_loop(
+        self, event: AstrMessageEvent, session: str, token: int, interval: int, timeout: int
+    ) -> None:
         deadline = asyncio.get_running_loop().time() + timeout
         last_text = ""
         try:
@@ -362,7 +395,9 @@ class RConsolePlugin(Star):
                 if terminal:
                     await self._send_output(event, output)
                     event.stop_event()
-                    logger.info(f"R插件[{self._event_tag(event)}] B站扫码自动轮询结束：{self._redact_cookie_text(text)}")
+                    logger.info(
+                        f"R插件[{self._event_tag(event)}] B站扫码自动轮询结束：{self._redact_cookie_text(text)}"
+                    )
                     return
             await event.send(event.plain_result("B站扫码登录超时：未在有效时间内完成扫码确认，请重新发送 #rbq。"))
             event.stop_event()
@@ -410,11 +445,22 @@ class RConsolePlugin(Star):
             return ""
         if self._platform_name(event).lower() == "webchat":
             return ""
-        role = str(getattr(event, "role", "") or getattr(getattr(getattr(event, "message_obj", None), "sender", None), "role", "")).lower()
+        role = str(
+            getattr(event, "role", "")
+            or getattr(getattr(getattr(event, "message_obj", None), "sender", None), "role", "")
+        ).lower()
         message_type = str(self._message_type_name(event)).lower()
-        if role == "admin" and "group" in message_type and get_config_value(config, "platform_settings.wl_ignore_admin_on_group", False):
+        if (
+            role == "admin"
+            and "group" in message_type
+            and get_config_value(config, "platform_settings.wl_ignore_admin_on_group", False)
+        ):
             return ""
-        if role == "admin" and ("friend" in message_type or "private" in message_type) and get_config_value(config, "platform_settings.wl_ignore_admin_on_friend", False):
+        if (
+            role == "admin"
+            and ("friend" in message_type or "private" in message_type)
+            and get_config_value(config, "platform_settings.wl_ignore_admin_on_friend", False)
+        ):
             return ""
         origin = str(getattr(event, "unified_msg_origin", "") or "").strip()
         group_id = str(self._group_id(event) or "").strip()
@@ -488,7 +534,11 @@ class RConsolePlugin(Star):
         return str(getattr(sender, "user_id", "") or getattr(sender, "id", ""))
 
     def _session_id(self, event: AstrMessageEvent) -> str:
-        return str(getattr(event, "unified_msg_origin", "") or getattr(getattr(event, "message_obj", None), "session_id", "") or "default")
+        return str(
+            getattr(event, "unified_msg_origin", "")
+            or getattr(getattr(event, "message_obj", None), "session_id", "")
+            or "default"
+        )
 
     def _is_admin(self, event: AstrMessageEvent) -> bool:
         for attr in ("is_admin", "isMaster", "is_master"):
@@ -513,13 +563,25 @@ class RConsolePlugin(Star):
     def _build_rules(self) -> list[RuleSpec]:
         """Build regex mapping from the original Yunzai rules."""
         specs = [
-            ("help", r"^#*(R|r)(插件)?(命令|帮助|菜单|help|说明|功能|指令|使用说明)$", "handle_help", "user", "apps/help.js"),
+            (
+                "help",
+                r"^#*(R|r)(插件)?(命令|帮助|菜单|help|说明|功能|指令|使用说明)$",
+                "handle_help",
+                "user",
+                "apps/help.js",
+            ),
             ("doctor", r"^#医药查询(.*)$", "handle_query", "user", "apps/query.js"),
             ("cat", r"^#cat$", "handle_query", "user", "apps/query.js"),
             ("software", r"^#推荐软件$", "handle_query", "user", "apps/query.js"),
             ("buyer_show", r"^#买家秀$", "handle_query", "user", "apps/query.js"),
             ("cospro", r"^#累了$", "handle_query", "user", "apps/query.js"),
-            ("pick_song", r"^#点歌\s*(.+?)(?:\s+([12]))?$|#听[1-9][0-9]*|#听[1-9]*$", "handle_song", "user", "apps/songRequest.js"),
+            (
+                "pick_song",
+                r"^#点歌\s*(.+?)(?:\s+([12]))?$|#听[1-9][0-9]*|#听[1-9]*$",
+                "handle_song",
+                "user",
+                "apps/songRequest.js",
+            ),
             ("play_song", r"^#播放\s*(.+?)(?:\s+([12]))?$", "handle_song", "user", "apps/songRequest.js"),
             ("upload", r"^#?上传$", "handle_song", "user", "apps/songRequest.js"),
             ("cloud", r"^#?我的云盘$|^#rnc$|^#RNC$", "handle_song", "admin", "apps/songRequest.js"),
@@ -533,16 +595,48 @@ class RConsolePlugin(Star):
             ("search_whitelist", r"^#查询R信任用户(.*)", "handle_switcher", "admin", "apps/switchers.js"),
             ("delete_whitelist", r"^#删除R信任用户(.*)", "handle_switcher", "admin", "apps/switchers.js"),
             ("trans", r"^(翻|trans)[中日文英俄韩]", "handle_tool", "user", "apps/tools.js"),
-            ("douyin", r"((v|live)\.douyin\.com|webcast\.amemv\.com|iesdouyin\.com|www\.douyin\.com/(video|note|live|share|jingxuan|discover))", "handle_tool", "user", "apps/tools.js"),
-            ("tiktok", r"(www\.tiktok\.com)|(vt\.tiktok\.com)|(vm\.tiktok\.com)", "handle_tool", "user", "apps/tools.js"),
+            (
+                "douyin",
+                r"((v|live)\.douyin\.com|webcast\.amemv\.com|iesdouyin\.com|"
+                r"www\.douyin\.com/(video|note|live|share|jingxuan|discover))",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
+            (
+                "tiktok",
+                r"(www\.tiktok\.com)|(vt\.tiktok\.com)|(vm\.tiktok\.com)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
             ("bili_scan", r"^#(RBQ|rbq)$", "handle_tool", "admin", "apps/tools.js"),
             ("bili_state", r"^#(RBS|rbs)$", "handle_tool", "admin", "apps/tools.js"),
-            ("bili", r"(bilibili\.com|b23\.tv|bili2233\.cn|m\.bilibili\.com|t\.bilibili\.com|^BV[1-9a-zA-Z]{10}$)", "handle_tool", "user", "apps/tools.js"),
-            ("twitter_x", r"https?:\/\/x\.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]*)", "handle_tool", "user", "apps/tools.js"),
+            (
+                "bili",
+                r"(bilibili\.com|b23\.tv|bili2233\.cn|m\.bilibili\.com|t\.bilibili\.com|^BV[1-9a-zA-Z]{10}$)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
+            (
+                "twitter_x",
+                r"https?:\/\/x\.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]*)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
             ("acfun", r"(acfun\.cn|^ac[0-9]{8}$)", "handle_tool", "user", "apps/tools.js"),
             ("xhs", r"(xhslink\.com|xiaohongshu\.com)", "handle_tool", "user", "apps/tools.js"),
             ("bodian", r"(h5app\.kuwo\.cn)", "handle_tool", "user", "apps/tools.js"),
-            ("general", r"(chenzhongtech\.com|kuaishou\.com|ixigua\.com|h5\.pipix\.com|h5\.pipigx\.com|s\.xsj\.qq\.com|m\.okjike\.com)", "handle_tool", "user", "apps/tools.js"),
+            (
+                "general",
+                r"(chenzhongtech\.com|kuaishou\.com|ixigua\.com|h5\.pipix\.com|"
+                r"h5\.pipigx\.com|s\.xsj\.qq\.com|m\.okjike\.com)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
             ("youtube", r"(youtube\.com|youtu\.be|music\.youtube\.com)", "handle_tool", "user", "apps/tools.js"),
             ("miyoushe", r"(miyoushe\.com)", "handle_tool", "user", "apps/tools.js"),
             ("netease", r"(music\.163\.com|163cn\.tv)", "handle_tool", "user", "apps/tools.js"),
@@ -550,17 +644,39 @@ class RConsolePlugin(Star):
             ("weishi", r"(weishi\.qq\.com)", "handle_tool", "user", "apps/tools.js"),
             ("zuiyou", r"share\.xiaochuankeji\.cn", "handle_tool", "user", "apps/tools.js"),
             ("freyr", r"(music\.apple\.com|open\.spotify\.com)", "handle_tool", "user", "apps/tools.js"),
-            ("summary", r"(^#总结一下\s*(http|https):\/\/.*|mp\.weixin\.qq\.com|arxiv\.org|sspai\.com|chinadaily\.com\.cn|zhihu\.com|github\.com|v2ex\.com)", "handle_tool", "user", "apps/tools.js"),
+            (
+                "summary",
+                r"(^#总结一下\s*(http|https):\/\/.*|mp\.weixin\.qq\.com|arxiv\.org|sspai\.com|"
+                r"chinadaily\.com\.cn|zhihu\.com|github\.com|v2ex\.com)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
             ("qq_music", r"(y\.qq\.com)", "handle_tool", "user", "apps/tools.js"),
             ("qishui", r"(qishui\.douyin\.com)", "handle_tool", "user", "apps/tools.js"),
-            ("aircraft", r"https:\/\/t\.me\/(?:c\/\d+\/\d+\/\d+|c\/\d+\/\d+|\w+\/\d+\/\d+|\w+\/\d+\?\w+=\d+|\w+\/\d+)", "handle_tool", "user", "apps/tools.js"),
+            (
+                "aircraft",
+                r"https:\/\/t\.me\/(?:c\/\d+\/\d+\/\d+|c\/\d+\/\d+|\w+\/\d+\/\d+|\w+\/\d+\?\w+=\d+|\w+\/\d+)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
             ("tieba", r"tieba\.baidu\.com", "handle_tool", "user", "apps/tools.js"),
             ("xiaoheihe", r"xiaoheihe\.cn", "handle_tool", "user", "apps/tools.js"),
-            ("netease_status", r"^#(网易云状态|rns|RNS|网易云云盘状态|rncs|RNCS)$", "handle_tool", "admin", "apps/tools.js"),
+            (
+                "netease_status",
+                r"^#(网易云状态|rns|RNS|网易云云盘状态|rncs|RNCS)$",
+                "handle_tool",
+                "admin",
+                "apps/tools.js",
+            ),
             ("netease_scan", r"^#(rnq|RNQ|rncq|RNCQ)$", "handle_tool", "admin", "apps/tools.js"),
             ("version", r"^#*R(插件)?版本$", "handle_version", "user", "apps/update.js"),
         ]
-        return [RuleSpec(name, re.compile(pattern), handler, permission, source) for name, pattern, handler, permission, source in specs]
+        return [
+            RuleSpec(name, re.compile(pattern), handler, permission, source)
+            for name, pattern, handler, permission, source in specs
+        ]
 
     async def handle_help(self, event: AstrMessageEvent, msg: str, rule: RuleSpec) -> ROutput:
         return self.help_version_service.help_text()
@@ -600,7 +716,9 @@ class RConsolePlugin(Star):
             return ROutput(text=f"当前服务器：{'海外服务器' if os else '国内服务器'}")
         if rule.name == "clear_trash":
             ret = self.state.clean_temp()
-            return ROutput(text=f"手动清理垃圾完成:\n- 清理了0个全局垃圾文件\n- 清理了{ret['folders']}个空文件夹\n- 清理了{ret['files']}个插件临时文件")
+            return ROutput(
+                text=f"手动清理垃圾完成:\n- 清理了0个全局垃圾文件\n- 清理了{ret['folders']}个空文件夹\n- 清理了{ret['files']}个插件临时文件"
+            )
         if rule.name == "get_whitelist":
             users = self.state.whitelist()
             return ROutput(text="R信任用户列表：\n" + (",\n".join(users) if users else "暂无"))
@@ -610,7 +728,12 @@ class RConsolePlugin(Star):
             return ROutput(text=self.state.add_whitelist(user_id)[1])
         if rule.name == "search_whitelist":
             user_id = msg.replace("#查询R信任用户", "", 1).strip() or self._sender_id(event)
-            return ROutput(text=f"{'✅' if self.state.is_whitelisted(user_id) else '⚠️'} {user_id}{'已经是' if self.state.is_whitelisted(user_id) else '不是'}R插件的信任用户哦~")
+            return ROutput(
+                text=(
+                    f"{'✅' if self.state.is_whitelisted(user_id) else '⚠️'} {user_id}"
+                    f"{'已经是' if self.state.is_whitelisted(user_id) else '不是'}R插件的信任用户哦~"
+                )
+            )
         if rule.name == "delete_whitelist":
             user_id = msg.replace("#删除R信任用户", "", 1).strip() or self._sender_id(event)
             return ROutput(text=self.state.remove_whitelist(user_id)[1])

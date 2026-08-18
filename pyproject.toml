@@ -1,0 +1,36 @@
+[project]
+name = "astrbot_plugin_rconsole"
+version = "0.3.11"
+description = "R-console / R-plugin 的 AstrBot 高复刻移植版"
+requires-python = ">=3.10"
+dependencies = [
+    "PyYAML>=6.0.1",
+    "Pillow>=10.0.0",
+    "yt-dlp>=2025.1.15",
+    "qrcode[pil]>=7.4.2",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+ignore = [
+    "E501",  # line length enforced separately at 120 via formatter
+]
+
+# Per-file exceptions for intentional patterns:
+# - N812: `import astrbot.api.message_components as Comp` / `logger as LOGGER` are
+#   deliberate aliases to AstrBot's public API names (kept for runtime compatibility).
+# - N802: test stubs must mirror AstrBot component method names (fromURL/fromFileSystem).
+# - E402: tests insert the repo root into sys.path before importing services.
+[tool.ruff.lint.per-file-ignores]
+"services/*.py" = ["N812"]
+"tests/*.py" = ["N802", "E402", "SIM105", "N812"]
+"services/help_version.py" = ["SIM105"]
+"services/netease.py" = ["SIM105"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

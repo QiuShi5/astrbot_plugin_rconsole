@@ -6,8 +6,8 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
-from .common import ROutput, request_json, truncate
 from .card_renderer import CardRenderer
+from .common import ROutput, request_json, truncate
 from .state import StateService
 
 DEFAULT_API = "https://neteasecloudmusicapi.vercel.app"
@@ -22,7 +22,9 @@ def fmt_duration(ms: int | float | None) -> str:
 
 
 class NeteaseService:
-    def __init__(self, state: StateService, api_base: str = "", resources_dir: Path | None = None, output_dir: Path | None = None):
+    def __init__(
+        self, state: StateService, api_base: str = "", resources_dir: Path | None = None, output_dir: Path | None = None
+    ):
         self.state = state
         self.api_base = (api_base or DEFAULT_API).rstrip("/")
         self.renderer = CardRenderer(resources_dir, output_dir=output_dir) if resources_dir is not None else None
@@ -54,26 +56,30 @@ class NeteaseService:
             for item in resources[:max_list]:
                 base = item.get("baseInfo", {})
                 main = base.get("mainSong", {})
-                songs.append({
-                    "id": main.get("id"),
-                    "songName": main.get("name", "未知声音"),
-                    "singerName": (base.get("dj") or {}).get("nickname", "未知作者"),
-                    "duration": fmt_duration(base.get("duration")),
-                    "type": "podcast",
-                    "cover": base.get("coverUrl", ""),
-                })
+                songs.append(
+                    {
+                        "id": main.get("id"),
+                        "songName": main.get("name", "未知声音"),
+                        "singerName": (base.get("dj") or {}).get("nickname", "未知作者"),
+                        "duration": fmt_duration(base.get("duration")),
+                        "type": "podcast",
+                        "cover": base.get("coverUrl", ""),
+                    }
+                )
         else:
             rows = (((data or {}).get("result") or {}).get("songs") or []) if isinstance(data, dict) else []
             for item in rows[:max_list]:
                 artists = item.get("artists") or item.get("ar") or []
-                songs.append({
-                    "id": item.get("id"),
-                    "songName": item.get("name", "未知歌曲"),
-                    "singerName": artists[0].get("name", "未知歌手") if artists else "未知歌手",
-                    "duration": fmt_duration(item.get("duration") or item.get("dt")),
-                    "type": "song",
-                    "cover": "",
-                })
+                songs.append(
+                    {
+                        "id": item.get("id"),
+                        "songName": item.get("name", "未知歌曲"),
+                        "singerName": artists[0].get("name", "未知歌手") if artists else "未知歌手",
+                        "duration": fmt_duration(item.get("duration") or item.get("dt")),
+                        "type": "song",
+                        "cover": "",
+                    }
+                )
         if not songs:
             return ROutput(text="暂未找到你想听的歌哦~")
         self.state.save_song_cache(session_id, songs)
@@ -81,7 +87,13 @@ class NeteaseService:
         for idx, song in enumerate(songs, 1):
             lines.append(f"#{idx} {song['songName']} - {song['singerName']} [{song['duration']}]")
         lines.append("\n发送 #听序号 播放，例如：#听1")
-        out = ROutput(text="\n".join(lines), forward_texts=[f"{i+1}. {s['songName']} - {s['singerName']}\nID：{s.get('id')}\n时长：{s.get('duration')}" for i, s in enumerate(songs)])
+        out = ROutput(
+            text="\n".join(lines),
+            forward_texts=[
+                f"{i + 1}. {s['songName']} - {s['singerName']}\nID：{s.get('id')}\n时长：{s.get('duration')}"
+                for i, s in enumerate(songs)
+            ],
+        )
         if self.renderer is not None:
             try:
                 out.images.append(self.renderer.render_pick_song(songs))
@@ -129,4 +141,6 @@ class NeteaseService:
         return ROutput(text=info + f"\n播放链接：{truncate(play_url, 300)}", audios=[play_url])
 
     async def status(self) -> ROutput:
-        return ROutput(text="网易云状态功能已迁移为配置驱动：请在 AstrBot 插件配置中填写 netease.cookie / cloud_cookie。扫码登录与云盘上传属于平台/账号强耦合能力，后续按平台支持程度启用。")
+        return ROutput(
+            text="网易云状态功能已迁移为配置驱动：请在 AstrBot 插件配置中填写 netease.cookie / cloud_cookie。扫码登录与云盘上传属于平台/账号强耦合能力，后续按平台支持程度启用。"
+        )

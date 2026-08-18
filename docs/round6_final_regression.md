@@ -48,7 +48,7 @@ astrbot_plugin_rconsole v0.3.0 PluginStatus.NOT_PUBLISHED
 
 ### 已解决/已优化
 
-- 原 R 插件 47 条入口已完整映射；
+- 原 R 插件 47 条入口已完整映射（AstrBot 版实现 46 条，`update` 入口按产品要求移除，parity 矩阵保留历史对照）；
 - 完整 parity matrix 已自动生成并验证；
 - 链接解析总开关和黑名单已生效；
 - yt-dlp 支持 `off/metadata/direct/download` 且 `enabled=false` 生效；

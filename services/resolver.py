@@ -13,7 +13,6 @@ from __future__ import annotations
 import asyncio
 import html
 import json
-import logging
 import re
 import urllib.error
 import urllib.parse
@@ -21,22 +20,51 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from .common import ROutput, USER_AGENT, first_url, request_json, request_text, strip_html, truncate
-from .media_downloader import YtDlpService
 from .bilibili_video import BilibiliVideoService
-
+from .common import USER_AGENT, ROutput, first_url, request_json, request_text, strip_html, truncate
+from .media_downloader import YtDlpService
 
 try:
     from astrbot.api import logger as LOGGER
 except Exception:  # pragma: no cover - plain unit tests outside AstrBot.
-    LOGGER = logging.getLogger(__name__)
+
+    class _FallbackLogger:
+        """Minimal no-op logger for tests running without AstrBot."""
+
+        def debug(self, *args, **kwargs):
+            pass
+
+        def info(self, *args, **kwargs):
+            pass
+
+        def warning(self, *args, **kwargs):
+            pass
+
+        def error(self, *args, **kwargs):
+            pass
+
+    LOGGER = _FallbackLogger()
 
 
 class ResolverService:
-    def __init__(self, *, temp_dir: Path | None = None, ytdlp_mode: str = "direct", max_filesize_mb: int = 70, proxy: str = "", bilibili_sessdata: str = "", douyin_cookie: str = "", douyin_duration: int = 480, xiaohongshu_cookie: str = "", download_timeout: int = 60):
+    def __init__(
+        self,
+        *,
+        temp_dir: Path | None = None,
+        ytdlp_mode: str = "direct",
+        max_filesize_mb: int = 70,
+        proxy: str = "",
+        bilibili_sessdata: str = "",
+        douyin_cookie: str = "",
+        douyin_duration: int = 480,
+        xiaohongshu_cookie: str = "",
+        download_timeout: int = 60,
+    ):
         temp = temp_dir or Path("data/temp")
         self.media = YtDlpService(temp, mode=ytdlp_mode, max_filesize_mb=max_filesize_mb, proxy=proxy)
-        self.bili_video = BilibiliVideoService(temp, max_filesize_mb=max_filesize_mb, sessdata=bilibili_sessdata, download_timeout=download_timeout)
+        self.bili_video = BilibiliVideoService(
+            temp, max_filesize_mb=max_filesize_mb, sessdata=bilibili_sessdata, download_timeout=download_timeout
+        )
         self.douyin_cookie = douyin_cookie.strip()
         self.douyin_duration = int(douyin_duration or 480)
         self.xiaohongshu_cookie = xiaohongshu_cookie.strip()
@@ -52,7 +80,19 @@ class ResolverService:
         if not url:
             return ROutput(text=f"✅ 识别：{self.display_name(rule_name)}\n未找到可解析链接。")
         # Prefer yt-dlp for media-like platforms; fall back to OpenGraph.
-        if rule_name in {"douyin", "tiktok", "twitter_x", "acfun", "youtube", "general", "weishi", "zuiyou", "tieba", "xiaoheihe", "qishui"}:
+        if rule_name in {
+            "douyin",
+            "tiktok",
+            "twitter_x",
+            "acfun",
+            "youtube",
+            "general",
+            "weishi",
+            "zuiyou",
+            "tieba",
+            "xiaoheihe",
+            "qishui",
+        }:
             out = await self.media.extract(url, platform=self.display_name(rule_name))
             if "未检测到 yt-dlp" not in out.text and "yt-dlp 解析失败" not in out.text:
                 return out
@@ -105,7 +145,11 @@ class ResolverService:
             text += f"\n简介：{truncate(desc, 240)}"
         if video:
             text += "\n已提取页面视频字段。"
-        return ROutput(text=text, images=[image] if image.startswith("http") else [], videos=[video] if video.startswith("http") else [])
+        return ROutput(
+            text=text,
+            images=[image] if image.startswith("http") else [],
+            videos=[video] if video.startswith("http") else [],
+        )
 
     def _extract_meta(self, html_text: str) -> dict[str, str]:
         result: dict[str, str] = {}
@@ -113,7 +157,9 @@ class ResolverService:
         if title_match:
             result["title"] = html.unescape(strip_html(title_match.group(1)))
         for match in re.finditer(r"<meta\s+([^>]+)>", html_text, re.I | re.S):
-            attrs = dict((k.lower(), html.unescape(v)) for k, v in re.findall(r"([a-zA-Z_:.-]+)=[\"'](.*?)[\"']", match.group(1)))
+            attrs = dict(
+                (k.lower(), html.unescape(v)) for k, v in re.findall(r"([a-zA-Z_:.-]+)=[\"'](.*?)[\"']", match.group(1))
+            )
             key = attrs.get("property") or attrs.get("name")
             content = attrs.get("content")
             if key and content:
@@ -126,7 +172,14 @@ class ResolverService:
             return ROutput(text="✅ 识别：抖音\n未找到可解析链接。")
         final_url, ttwid = await self._expand_douyin_url(url)
         detail_id = self._extract_douyin_id(final_url) or self._extract_douyin_id(url)
-        LOGGER.info("R插件抖音解析开始：url=%s final_url=%s detail_id=%s ytdlp_mode=%s cookie=%s", url, final_url or url, detail_id or "", self.media.mode, "已配置" if self.douyin_cookie else "未配置")
+        LOGGER.info(
+            "R插件抖音解析开始：url=%s final_url=%s detail_id=%s ytdlp_mode=%s cookie=%s",
+            url,
+            final_url or url,
+            detail_id or "",
+            self.media.mode,
+            "已配置" if self.douyin_cookie else "未配置",
+        )
         media_candidates = [url]
         if final_url and final_url != url:
             media_candidates.append(final_url)
@@ -141,9 +194,21 @@ class ResolverService:
             media_out = await self.media.extract(candidate, platform="抖音")
             last_media_text = media_out.text
             if media_out.videos or media_out.files:
-                LOGGER.info("R插件抖音yt-dlp解析成功：candidate=%s images=%d videos=%d files=%d", candidate, len(media_out.images), len(media_out.videos), len(media_out.files))
+                LOGGER.info(
+                    "R插件抖音yt-dlp解析成功：candidate=%s images=%d videos=%d files=%d",
+                    candidate,
+                    len(media_out.images),
+                    len(media_out.videos),
+                    len(media_out.files),
+                )
                 return media_out
-            LOGGER.info("R插件抖音yt-dlp未产出视频，准备尝试下一路径/官方接口：candidate=%s images=%d videos=%d files=%d", candidate, len(media_out.images), len(media_out.videos), len(media_out.files))
+            LOGGER.info(
+                "R插件抖音yt-dlp未产出视频，准备尝试下一路径/官方接口：candidate=%s images=%d videos=%d files=%d",
+                candidate,
+                len(media_out.images),
+                len(media_out.videos),
+                len(media_out.files),
+            )
 
         if not detail_id:
             return ROutput(text=f"✅ 识别：抖音\n链接：{url}\n未提取到作品 ID，无法继续解析。")
@@ -156,12 +221,20 @@ class ResolverService:
                 )
             )
         try:
-            data = await request_json(self._douyin_detail_api(detail_id), headers=self._douyin_headers(ttwid=ttwid), timeout=20)
+            data = await request_json(
+                self._douyin_detail_api(detail_id), headers=self._douyin_headers(ttwid=ttwid), timeout=20
+            )
             item = data.get("aweme_detail") if isinstance(data, dict) else None
             if not item:
                 raise ValueError(f"接口未返回 aweme_detail：{truncate(str(data), 240)}")
             output = self._format_douyin_item(item, final_url or url)
-            LOGGER.info("R插件抖音官方接口解析成功：detail_id=%s images=%d videos=%d audios=%d", detail_id, len(output.images), len(output.videos), len(output.audios))
+            LOGGER.info(
+                "R插件抖音官方接口解析成功：detail_id=%s images=%d videos=%d audios=%d",
+                detail_id,
+                len(output.images),
+                len(output.videos),
+                len(output.audios),
+            )
             return output
         except Exception as exc:
             LOGGER.warning("R插件抖音官方接口解析失败 id=%s url=%s: %s", detail_id, url, exc)
@@ -244,9 +317,9 @@ class ResolverService:
 
     def _format_douyin_item(self, item: dict[str, Any], source_url: str) -> ROutput:
         desc = str(item.get("desc") or "无简介")
-        author = ((item.get("author") or {}).get("nickname") or "未知作者")
+        author = (item.get("author") or {}).get("nickname") or "未知作者"
         aweme_type = item.get("aweme_type")
-        cover = self._last_url((((item.get("video") or {}).get("cover") or {}).get("url_list") or []))
+        cover = self._last_url(((item.get("video") or {}).get("cover") or {}).get("url_list") or [])
         text = f"✅ 识别：抖音，{author}\n📝 简介：{truncate(desc, 300)}\n链接：{source_url}"
 
         images = [cover] if cover else []
@@ -265,7 +338,9 @@ class ResolverService:
                     text += "\n已提取视频直链。"
 
         if not videos and item.get("images"):
-            images = [self._last_url(img.get("url_list") or []) for img in item.get("images") or [] if isinstance(img, dict)]
+            images = [
+                self._last_url(img.get("url_list") or []) for img in item.get("images") or [] if isinstance(img, dict)
+            ]
             images = [img for img in images if img]
             if images:
                 text += f"\n已提取 {len(images)} 张图片。"
@@ -273,15 +348,17 @@ class ResolverService:
         return ROutput(text=text, images=images, videos=videos, audios=audios)
 
     def _douyin_video_url(self, video: dict[str, Any]) -> str:
-        uri = ((video.get("play_addr") or {}).get("uri") or "")
+        uri = (video.get("play_addr") or {}).get("uri") or ""
         if uri:
-            return "https://aweme.snssdk.com/aweme/v1/play/?" + urllib.parse.urlencode({
-                "video_id": uri,
-                "ratio": "1080p",
-                "line": "0",
-            })
+            return "https://aweme.snssdk.com/aweme/v1/play/?" + urllib.parse.urlencode(
+                {
+                    "video_id": uri,
+                    "ratio": "1080p",
+                    "line": "0",
+                }
+            )
         for key in ("play_addr", "play_addr_h264", "play_addr_265"):
-            url = self._last_url(((video.get(key) or {}).get("url_list") or []))
+            url = self._last_url((video.get(key) or {}).get("url_list") or [])
             if url:
                 return url
         return ""
@@ -307,7 +384,9 @@ class ResolverService:
             return await self.media.extract(url, platform="哔哩哔哩")
         if not bvid:
             return await self.resolve_generic("bili", msg)
-        page_url = final_url if final_url and self._extract_bvid(final_url) else f"https://www.bilibili.com/video/{bvid}"
+        page_url = (
+            final_url if final_url and self._extract_bvid(final_url) else f"https://www.bilibili.com/video/{bvid}"
+        )
         api = "https://api.bilibili.com/x/web-interface/view?" + urllib.parse.urlencode({"bvid": bvid})
         try:
             data = await request_json(api, headers=self._bili_headers(page_url), timeout=15)
@@ -376,7 +455,11 @@ class ResolverService:
         return str(value)
 
     def _filter_bili_desc_link(self, desc: str) -> str:
-        return re.sub(r"(?:https?://)?(?:www\.|music\.)?youtube\.com/[A-Za-z\d._?%&+\-=/#]*", "", desc or "").replace("\n", "").strip()
+        return (
+            re.sub(r"(?:https?://)?(?:www\.|music\.)?youtube\.com/[A-Za-z\d._?%&+\-=/#]*", "", desc or "")
+            .replace("\n", "")
+            .strip()
+        )
 
     def _extract_bvid(self, text: str) -> str:
         match = re.search(r"BV[1-9a-zA-Z]{10}", text or "")
@@ -423,14 +506,20 @@ class ResolverService:
         artists = song.get("ar") or []
         album = song.get("al") or {}
         play = await self._netease_play_url(song_id)
-        text = f"✅ 识别：网易云音乐\n歌曲：{song.get('name', '未知歌曲')}\n歌手：{artists[0].get('name', '未知歌手') if artists else '未知歌手'}\n专辑：{album.get('name', '未知专辑')}\nID：{song_id}"
+        artists_text = artists[0].get("name", "未知歌手") if artists else "未知歌手"
+        text = (
+            f"✅ 识别：网易云音乐\n歌曲：{song.get('name', '未知歌曲')}\n歌手：{artists_text}\n"
+            f"专辑：{album.get('name', '未知专辑')}\nID：{song_id}"
+        )
         if play:
             text += "\n已获取播放链接。"
         pic = album.get("picUrl", "")
         return ROutput(text=text, images=[pic] if pic else [], audios=[play] if play else [])
 
     async def _netease_play_url(self, song_id: str) -> str:
-        api = "https://neteasecloudmusicapi.vercel.app/song/url/v1?" + urllib.parse.urlencode({"id": song_id, "level": "exhigh"})
+        api = "https://neteasecloudmusicapi.vercel.app/song/url/v1?" + urllib.parse.urlencode(
+            {"id": song_id, "level": "exhigh"}
+        )
         try:
             data = await request_json(api, timeout=15)
             rows = data.get("data", []) if isinstance(data, dict) else []
@@ -471,36 +560,64 @@ class ResolverService:
                 )
             )
 
-        req_url = "https://www.xiaohongshu.com/explore/" + note_id + "?" + urllib.parse.urlencode({
-            "xsec_token": xsec_token,
-            "xsec_source": xsec_source,
-        })
+        req_url = (
+            "https://www.xiaohongshu.com/explore/"
+            + note_id
+            + "?"
+            + urllib.parse.urlencode(
+                {
+                    "xsec_token": xsec_token,
+                    "xsec_source": xsec_source,
+                }
+            )
+        )
         try:
             html_text = await request_text(req_url, headers=self._xhs_headers(), timeout=20)
             note = self._extract_xhs_note_from_html(html_text, note_id)
             if not note:
                 fallback = self._format_xhs_fallback(html_text, final_url or req_url, msg)
                 if fallback:
-                    LOGGER.info("R插件小红书使用页面元信息兜底：note_id=%s images=%d videos=%d", note_id, len(fallback.images), len(fallback.videos))
+                    LOGGER.info(
+                        "R插件小红书使用页面元信息兜底：note_id=%s images=%d videos=%d",
+                        note_id,
+                        len(fallback.images),
+                        len(fallback.videos),
+                    )
                     return fallback
                 return ROutput(text="✅ 识别：小红书\n检测到无效的小红书 Cookie，或该笔记需要重新登录后获取 Cookie。")
             output = self._format_xhs_note(note, final_url or req_url)
-            LOGGER.info("R插件小红书解析成功：note_id=%s type=%s images=%d videos=%d", note_id, note.get("type") or "", len(output.images), len(output.videos))
+            LOGGER.info(
+                "R插件小红书解析成功：note_id=%s type=%s images=%d videos=%d",
+                note_id,
+                note.get("type") or "",
+                len(output.images),
+                len(output.videos),
+            )
             return output
         except Exception as exc:
             try:
-                fallback = self._format_xhs_fallback(html_text if 'html_text' in locals() else "", final_url or req_url, msg)
+                fallback = self._format_xhs_fallback(
+                    html_text if "html_text" in locals() else "", final_url or req_url, msg
+                )
             except Exception:
                 fallback = None
             if fallback:
-                LOGGER.info("R插件小红书INITIAL_STATE失败后使用兜底：note_id=%s err=%s images=%d videos=%d", note_id, exc, len(fallback.images), len(fallback.videos))
+                LOGGER.info(
+                    "R插件小红书INITIAL_STATE失败后使用兜底：note_id=%s err=%s images=%d videos=%d",
+                    note_id,
+                    exc,
+                    len(fallback.images),
+                    len(fallback.videos),
+                )
                 return fallback
             LOGGER.warning("R插件小红书解析失败 note_id=%s url=%s: %s", note_id, req_url, exc)
             return ROutput(text=f"✅ 识别：小红书\n链接：{final_url or req_url}\n解析失败：{exc}")
 
     def _extract_xhs_url(self, msg: str) -> str:
         normalized = html.unescape(msg or "").strip().replace("amp;", "")
-        xml_match = re.search(r"<url>\s*(https?://(?:www\.)?(?:xhslink|xiaohongshu)\.com/.*?)\s*</url>", normalized, re.I | re.S)
+        xml_match = re.search(
+            r"<url>\s*(https?://(?:www\.)?(?:xhslink|xiaohongshu)\.com/.*?)\s*</url>", normalized, re.I | re.S
+        )
         if xml_match:
             return self._clean_xhs_url(xml_match.group(1))
         match = re.search(r"https?://(?:www\.)?(?:xhslink|xiaohongshu)\.com/[^\s\]）)>\"']+", normalized)
@@ -508,7 +625,7 @@ class ResolverService:
 
     def _clean_xhs_url(self, url: str) -> str:
         value = html.unescape(str(url or "")).strip().replace("amp;", "")
-        value = re.split(r"<\/?url\b|<\/?msg\b|<\/?appmsg\b", value, 1, flags=re.I)[0]
+        value = re.split(r"<\/?url\b|<\/?msg\b|<\/?appmsg\b", value, maxsplit=1, flags=re.I)[0]
         value = value.rstrip(".,;，。；\r\n\t ")
         return value
 
@@ -540,7 +657,11 @@ class ResolverService:
             return exc.geturl() or exc.headers.get("Location") or url
 
     def _extract_xhs_note_id(self, value: str) -> str:
-        for pattern in (r"noteId=([0-9a-zA-Z]+)", r"/(?:explore|discovery/item)/([0-9a-zA-Z]+)", r"/item/([0-9a-zA-Z]+)"):
+        for pattern in (
+            r"noteId=([0-9a-zA-Z]+)",
+            r"/(?:explore|discovery/item)/([0-9a-zA-Z]+)",
+            r"/item/([0-9a-zA-Z]+)",
+        ):
             match = re.search(pattern, value or "")
             if match:
                 return match.group(1)
@@ -551,10 +672,18 @@ class ResolverService:
         return values[0] if values else ""
 
     def _xhs_headers(self) -> dict[str, str]:
+        accept = (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,"
+            "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
+        )
+        ua = (
+            "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/55.0.2883.87 UBrowser/6.2.4098.3 Safari/537.36"
+        )
         return {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept": accept,
             "Cookie": self.xiaohongshu_cookie,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 UBrowser/6.2.4098.3 Safari/537.36",
+            "User-Agent": ua,
             "Referer": "https://www.xiaohongshu.com/",
         }
 
@@ -606,7 +735,10 @@ class ResolverService:
         ids = {str(value.get(key) or "") for key in ("id", "noteId", "note_id")}
         if note_id and note_id in ids:
             return True
-        return bool((value.get("imageList") or value.get("images")) and (value.get("title") is not None or value.get("desc") is not None or value.get("video")))
+        return bool(
+            (value.get("imageList") or value.get("images"))
+            and (value.get("title") is not None or value.get("desc") is not None or value.get("video"))
+        )
 
     def _format_xhs_fallback(self, html_text: str, source_url: str, original_msg: str = "") -> ROutput | None:
         meta = self._extract_meta(html_text or "") if html_text else {}
@@ -652,7 +784,11 @@ class ResolverService:
         title = str(note.get("title") or "未命名笔记")
         desc = str(note.get("desc") or "")
         note_type = str(note.get("type") or "")
-        images = [self._normalize_xhs_media_url(self._xhs_image_url(item)) for item in note.get("imageList") or note.get("images") or [] if isinstance(item, dict)]
+        images = [
+            self._normalize_xhs_media_url(self._xhs_image_url(item))
+            for item in note.get("imageList") or note.get("images") or []
+            if isinstance(item, dict)
+        ]
         images = [item for item in images if item.startswith("http")]
         text = f"✅ 识别：小红书，{truncate(title, 120)}"
         if desc:
@@ -677,19 +813,21 @@ class ResolverService:
         )
 
     def _xhs_video_url(self, note: dict[str, Any]) -> str:
-        stream = (((note.get("video") or {}).get("media") or {}).get("stream") or {})
+        stream = ((note.get("video") or {}).get("media") or {}).get("stream") or {}
         candidates: list[str] = []
         for key in ("h264", "h265", "av1"):
             for item in stream.get(key) or []:
                 if not isinstance(item, dict):
                     continue
-                candidates.extend([
-                    item.get("masterUrl") or "",
-                    item.get("master_url") or "",
-                    item.get("url") or "",
-                ])
+                candidates.extend(
+                    [
+                        item.get("masterUrl") or "",
+                        item.get("master_url") or "",
+                        item.get("url") or "",
+                    ]
+                )
                 candidates.extend(item.get("backupUrls") or item.get("backup_urls") or [])
-        origin_key = (((note.get("video") or {}).get("consumer") or {}).get("originVideoKey") or "")
+        origin_key = ((note.get("video") or {}).get("consumer") or {}).get("originVideoKey") or ""
         if origin_key:
             candidates.append("http://sns-video-bd.xhscdn.com/" + str(origin_key).lstrip("/"))
         for candidate in candidates:

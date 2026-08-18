@@ -15,8 +15,7 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125 Sa
 
 
 class BilibiliVideoService:
-    def __init__(self, temp_dir: Path, *, max_filesize_mb: int = 70, sessdata: str = "",
-                 download_timeout: int = 60):
+    def __init__(self, temp_dir: Path, *, max_filesize_mb: int = 70, sessdata: str = "", download_timeout: int = 60):
         self.temp_dir = temp_dir
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         self.max_filesize_mb = int(max_filesize_mb or 70)
@@ -43,11 +42,21 @@ class BilibiliVideoService:
         if not media_url:
             return ROutput(text="B站 playurl 返回为空。")
         if size_mb and size_mb > self.max_filesize_mb:
-            return ROutput(text=f"B站视频大小约 {size_mb:.1f} MB，超过配置上限 {self.max_filesize_mb} MB，未下载发送视频。")
+            return ROutput(
+                text=f"B站视频大小约 {size_mb:.1f} MB，超过配置上限 {self.max_filesize_mb} MB，未下载发送视频。"
+            )
         try:
-            local = self._download_video(media_url, page_url=page_url, stem=f"{bvid}_{title or 'video'}", limit_mb=self.max_filesize_mb)
+            local = self._download_video(
+                media_url, page_url=page_url, stem=f"{bvid}_{title or 'video'}", limit_mb=self.max_filesize_mb
+            )
         except Exception as exc:
-            return ROutput(text=f"B站视频直链已获取，但下载成本地文件失败（超时=下载失败，可在配置中调高 video_download_timeout）：{exc}\n直链可能需要 Referer/Cookie，已避免直接远程发送导致适配器失败。")
+            return ROutput(
+                text=(
+                    f"B站视频直链已获取，但下载成本地文件失败"
+                    f"（超时=下载失败，可在配置中调高 video_download_timeout）：{exc}\n"
+                    "直链可能需要 Referer/Cookie，已避免直接远程发送导致适配器失败。"
+                )
+            )
         return ROutput(text=f"已获取并下载 B站视频：{Path(local).name}（清晰度 qn={selected_qn}）", videos=[local])
 
     def _request_best_playurl(self, *, bvid: str, cid: str, page_url: str) -> tuple[dict[str, Any], str]:

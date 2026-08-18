@@ -35,7 +35,10 @@ class QueryService:
         errors: list[str] = []
         for url, parser in [
             ("https://shibe.online/api/cats?count=10", lambda data: data if isinstance(data, list) else []),
-            ("https://api.thecatapi.com/v1/images/search?limit=10", lambda data: [x.get("url") for x in data if isinstance(x, dict) and x.get("url")]),
+            (
+                "https://api.thecatapi.com/v1/images/search?limit=10",
+                lambda data: [x.get("url") for x in data if isinstance(x, dict) and x.get("url")],
+            ),
         ]:
             try:
                 images.extend(parser(await request_json(url, timeout=18)))

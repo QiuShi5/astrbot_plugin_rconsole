@@ -36,7 +36,9 @@ def test_plugin_data_survives_reinstall():
     astrbot_root = base / "astrbot_root"
     legacy_dir = install_root / "data"
     legacy_dir.mkdir(parents=True, exist_ok=True)
-    (legacy_dir / "state.json").write_text(json.dumps({"oversea": True, "resolve_disabled": ["bili"]}), encoding="utf-8")
+    (legacy_dir / "state.json").write_text(
+        json.dumps({"oversea": True, "resolve_disabled": ["bili"]}), encoding="utf-8"
+    )
     (legacy_dir / "bilibili_auth.json").write_text(json.dumps({"sessdata": "legacy-sess"}), encoding="utf-8")
 
     install_astrbot_path_stub(astrbot_root)
@@ -51,7 +53,9 @@ def test_plugin_data_survives_reinstall():
     reinstall_data_dir = astrbot_plugin_data_dir(reinstall_root)
     assert reinstall_data_dir == data_dir
     assert StateService(reinstall_data_dir).is_whitelisted("10001")
-    assert json.loads((reinstall_data_dir / "bilibili_auth.json").read_text(encoding="utf-8"))["sessdata"] == "legacy-sess"
+    assert (
+        json.loads((reinstall_data_dir / "bilibili_auth.json").read_text(encoding="utf-8"))["sessdata"] == "legacy-sess"
+    )
 
 
 def main():

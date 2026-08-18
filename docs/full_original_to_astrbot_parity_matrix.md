@@ -1,6 +1,6 @@
 # 原 R 插件 → AstrBot 版完整逐规则功能矩阵
 
-本矩阵由 `tests/generate_full_parity_matrix.py` 从 AstrBot 版 `main.py::_build_rules()` 自动生成并核对，共 47 条，覆盖原 `apps/*.js` 全部 `reg:` 入口。
+本矩阵由 `tests/generate_full_parity_matrix.py` 从 AstrBot 版 `main.py::_build_rules()` 自动生成并核对，共 47 条，覆盖原 `apps/*.js` 全部 `reg:` 入口；其中 AstrBot 版实现 46 条，第 47 条 `update`（`apps/update.js`）按产品要求移除聊天内更新入口，矩阵保留其历史对照。
 
 | # | 原模块 | 原规则名 | 原正则 | 权限 | AstrBot handler | 功能 | 状态 | AstrBot 实现 | 验证证据 | 剩余运行时要求 |
 |---:|---|---|---|---|---|---|---|---|---|---|

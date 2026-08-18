@@ -18,19 +18,19 @@
 | 来源模块数量分布 | 与原插件一致 |
 | parity matrix JSON | 保留历史对照；代码侧已按产品要求移除更新入口 |
 | 配置 schema 必备组 | 通过 |
-| metadata 版本/兼容性 | v0.3.11 / >=4.14,<5 |
+| metadata 版本/兼容性 | 0.3.11 / >=4.14,<5 |
 | README 关键证据链接 | 通过 |
 
 ## 模块分布
 
 | 模块 | 原 R 规则数 | AstrBot 规则数 |
 |---|---:|---:|
-| `apps/help.js` | 未提供 source 快照 | 1 |
-| `apps/query.js` | 未提供 source 快照 | 5 |
-| `apps/songRequest.js` | 未提供 source 快照 | 7 |
-| `apps/switchers.js` | 未提供 source 快照 | 6 |
-| `apps/tools.js` | 未提供 source 快照 | 26 |
-| `apps/update.js` | 未提供 source 快照 | 1 |
+| `apps/help.js` | 1 | 1 |
+| `apps/query.js` | 5 | 5 |
+| `apps/songRequest.js` | 7 | 7 |
+| `apps/switchers.js` | 6 | 6 |
+| `apps/tools.js` | 26 | 26 |
+| `apps/update.js` | 1 | 1 |
 
 ## 发现的问题
 

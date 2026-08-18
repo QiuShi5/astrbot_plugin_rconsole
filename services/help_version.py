@@ -55,7 +55,12 @@ class HelpVersionService:
         text = path.read_text(encoding="utf-8") if path.exists() else ""
         version_match = re.search(r"version:\s*([^,\n}]+)", text)
         version = version_match.group(1).strip() if version_match else "0.1.0"
-        raw_items = re.findall(r"<span class=\"cmd\">(.*?)</span>|新增<span class=\"cmd\">(.*?)</span>|优化<span class=\"cmd\">(.*?)</span>|支持<span class=\"cmd\">(.*?)</span>|重构<span class=\"cmd\">(.*?)</span>|增强<span class=\"cmd\">(.*?)</span>", text)
+        raw_items = re.findall(
+            r"<span class=\"cmd\">(.*?)</span>|新增<span class=\"cmd\">(.*?)</span>|"
+            r"优化<span class=\"cmd\">(.*?)</span>|支持<span class=\"cmd\">(.*?)</span>|"
+            r"重构<span class=\"cmd\">(.*?)</span>|增强<span class=\"cmd\">(.*?)</span>",
+            text,
+        )
         flat: list[str] = []
         for item in raw_items:
             if isinstance(item, tuple):

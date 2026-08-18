@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-USER_AGENT = "Mozilla/5.0 (Linux; Android 5.0; AstrBot RConsole Port) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
+USER_AGENT = (
+    "Mozilla/5.0 (Linux; Android 5.0; AstrBot RConsole Port) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
+)
 
 
 @dataclass

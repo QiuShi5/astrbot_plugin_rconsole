@@ -14,8 +14,20 @@ import tempfile
 import types
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parents[1]
+PLUGIN = ROOT
+# The workspace root is the plugin root. Register it under the canonical package
+# name so `import astrbot_plugin_rconsole.main` works from tests even though the
+# on-disk directory is not literally named astrbot_plugin_rconsole.
+if "astrbot_plugin_rconsole" not in sys.modules:
+    import types
+
+    _pkg = types.ModuleType("astrbot_plugin_rconsole")
+    _pkg.__path__ = [str(PLUGIN)]
+    sys.modules["astrbot_plugin_rconsole"] = _pkg
+_plugin_parent = str(PLUGIN.parent)
+if _plugin_parent not in sys.path:
+    sys.path.insert(0, _plugin_parent)
 
 
 def install_astrbot_stubs(with_components: bool = True) -> None:
@@ -55,11 +67,13 @@ def install_astrbot_stubs(with_components: bool = True) -> None:
         def command(self, *args, **kwargs):
             def deco(func):
                 return func
+
             return deco
 
         def event_message_type(self, *args, **kwargs):
             def deco(func):
                 return func
+
             return deco
 
     api.AstrBotConfig = AstrBotConfig
@@ -197,13 +211,22 @@ class FakeOneBot:
 
 
 class RejectVideoEvent(FakeEvent):
-    def __init__(self, *args, with_bot: bool = False, fail_files: set[str] | None = None, timeout_files: set[str] | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        with_bot: bool = False,
+        fail_files: set[str] | None = None,
+        timeout_files: set[str] | None = None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         if with_bot:
             self.bot = FakeOneBot(fail_files=fail_files, timeout_files=timeout_files)
 
     async def send(self, payload):
-        if payload.get("type") == "chain" and any(isinstance(x, tuple) and x[0] == "video_file" for x in payload.get("chain", [])):
+        if payload.get("type") == "chain" and any(
+            isinstance(x, tuple) and x[0] == "video_file" for x in payload.get("chain", [])
+        ):
             raise RuntimeError("onebot video rejected")
         self.sent.append(payload)
 
@@ -223,20 +246,26 @@ async def main():
     assert any(isinstance(x, tuple) and x[0] == "image_file" for x in ev.sent[0]["chain"])
 
     ev = FakeEvent("media matrix", platform_name="matrix")
-    await plugin._send_output(ev, module.ROutput(text="media", images=[str(Path(__file__).resolve())], videos=[str(Path(__file__).resolve())]))
+    await plugin._send_output(
+        ev, module.ROutput(text="media", images=[str(Path(__file__).resolve())], videos=[str(Path(__file__).resolve())])
+    )
     assert len(ev.sent) == 1 and ev.sent[0]["type"] == "chain"
     assert any(isinstance(x, tuple) and x[0] == "image_file" for x in ev.sent[0]["chain"])
     assert any(isinstance(x, tuple) and x[0] == "video_file" for x in ev.sent[0]["chain"])
 
     ev = FakeEvent("media onebot", platform_name="aiocqhttp")
-    await plugin._send_output(ev, module.ROutput(text="media", images=[str(Path(__file__).resolve())], videos=[str(Path(__file__).resolve())]))
+    await plugin._send_output(
+        ev, module.ROutput(text="media", images=[str(Path(__file__).resolve())], videos=[str(Path(__file__).resolve())])
+    )
     assert [x["type"] for x in ev.sent] == ["chain", "chain"]
     assert any(getattr(x, "text", "") == "media" for x in ev.sent[0]["chain"])
     assert any(isinstance(x, tuple) and x[0] == "image_file" for x in ev.sent[0]["chain"])
     assert ev.sent[1]["chain"] == [("video_file", str(Path(__file__).resolve()))]
 
     ev = FakeEvent("media generic", platform_name="generic")
-    await plugin._send_output(ev, module.ROutput(text="media", images=[str(Path(__file__).resolve())], videos=[str(Path(__file__).resolve())]))
+    await plugin._send_output(
+        ev, module.ROutput(text="media", images=[str(Path(__file__).resolve())], videos=[str(Path(__file__).resolve())])
+    )
     assert [x["type"] for x in ev.sent] == ["chain"]
     assert any(getattr(x, "text", "") == "media" for x in ev.sent[0]["chain"])
     assert any(isinstance(x, tuple) and x[0] == "image_file" for x in ev.sent[0]["chain"])
@@ -288,29 +317,35 @@ async def main():
     await plugin.rconsole_dispatch(ev)
     assert ev.sent == [] and not ev.stopped
 
-    assert plugin.output_sender._safe_video_extension('https://example.com/a.mp4?sign=21b3c1fb', '') == '.mp4'
-    assert plugin.output_sender._safe_video_extension('https://example.com/a.mp4sign21b3c1fb', '') == '.mp4'
-    assert plugin.output_sender._stable_url_token('https://example.com/a.mp4?sign=21b3c1fb')
+    assert plugin.output_sender._safe_video_extension("https://example.com/a.mp4?sign=21b3c1fb", "") == ".mp4"
+    assert plugin.output_sender._safe_video_extension("https://example.com/a.mp4sign21b3c1fb", "") == ".mp4"
+    assert plugin.output_sender._stable_url_token("https://example.com/a.mp4?sign=21b3c1fb")
 
     local_xhs_video = plugin.data_dir / "temp" / "xhs-preview.mp4"
     local_xhs_video.parent.mkdir(parents=True, exist_ok=True)
     local_xhs_video.write_bytes(b"fake mp4")
     ev = FakeEvent("matrix xhs preview", platform_name="matrix")
     output = module.ROutput(text="xhs", videos=[str(local_xhs_video)])
-    prepared = await plugin._prepare_output_for_send(ev, output, module.RuleSpec("xhs", __import__('re').compile("x"), "handle_tool"))
+    prepared = await plugin._prepare_output_for_send(
+        ev, output, module.RuleSpec("xhs", __import__("re").compile("x"), "handle_tool")
+    )
     assert prepared.videos == [str(local_xhs_video)]
     assert prepared.files == []
 
     plugin = module.RConsolePlugin(module.Context(), {})
     called_downloads = []
+
     async def fake_download(source, rule_name=""):
         called_downloads.append((source, rule_name))
         return "/tmp/localized.mp4"
+
     plugin.output_sender._download_remote_video_for_file = fake_download
     ev = FakeEvent("douyin unified localize", platform_name="matrix")
     remote_video = "https://aweme.snssdk.com/aweme/v1/play/?video_id=abc"
     output = module.ROutput(text="douyin", videos=[remote_video])
-    prepared = await plugin._prepare_output_for_send(ev, output, module.RuleSpec("douyin", __import__('re').compile("x"), "handle_tool"))
+    prepared = await plugin._prepare_output_for_send(
+        ev, output, module.RuleSpec("douyin", __import__("re").compile("x"), "handle_tool")
+    )
     assert called_downloads == [(remote_video, "douyin")]
     assert prepared.videos == ["/tmp/localized.mp4"]
     assert prepared.files == []
@@ -318,21 +353,29 @@ async def main():
     plugin = module.RConsolePlugin(module.Context(), {"douyin": {"display_source_link": False}})
     output = module.ROutput(text="ok\n\u94fe\u63a5\uff1ahttps://example.com/a\nkeep")
     ev = FakeEvent("source link hidden", platform_name="matrix")
-    prepared = await plugin._prepare_output_for_send(ev, output, module.RuleSpec("douyin", __import__('re').compile("x"), "handle_tool"))
+    prepared = await plugin._prepare_output_for_send(
+        ev, output, module.RuleSpec("douyin", __import__("re").compile("x"), "handle_tool")
+    )
     assert prepared.text == "ok\nkeep"
 
     plugin = module.RConsolePlugin(module.Context(), {})
     output = module.ROutput(text="ok\n\u94fe\u63a5\uff1ahttps://example.com/a\nkeep")
-    prepared = await plugin._prepare_output_for_send(ev, output, module.RuleSpec("general", __import__('re').compile("x"), "handle_tool"))
+    prepared = await plugin._prepare_output_for_send(
+        ev, output, module.RuleSpec("general", __import__("re").compile("x"), "handle_tool")
+    )
     assert prepared.text == "ok\nkeep"
 
     output = module.ROutput(text="ok\n\u94fe\u63a5\uff1ahttps://example.com/a\n\u89e3\u6790\u5931\u8d25\uff1abad")
-    prepared = await plugin._prepare_output_for_send(ev, output, module.RuleSpec("general", __import__('re').compile("x"), "handle_tool"))
+    prepared = await plugin._prepare_output_for_send(
+        ev, output, module.RuleSpec("general", __import__("re").compile("x"), "handle_tool")
+    )
     assert "\u94fe\u63a5\uff1ahttps://example.com/a" in prepared.text
 
     plugin = module.RConsolePlugin(module.Context(), {"source_link_display": {"douyin": True}})
     output = module.ROutput(text="ok\n\u94fe\u63a5\uff1ahttps://example.com/a\nkeep")
-    prepared = await plugin._prepare_output_for_send(ev, output, module.RuleSpec("douyin", __import__('re').compile("x"), "handle_tool"))
+    prepared = await plugin._prepare_output_for_send(
+        ev, output, module.RuleSpec("douyin", __import__("re").compile("x"), "handle_tool")
+    )
     assert prepared.text == "ok\n\u94fe\u63a5\uff1ahttps://example.com/a\nkeep"
 
     ev = FakeEvent("#设置海外解析", admin=False)
@@ -358,25 +401,44 @@ async def main():
     assert ev.sent == [] and ev.stopped
 
     plugin = module.RConsolePlugin(module.Context(), {"conversation_whitelist": ["session-1"]})
-    plugin.resolver_service.resolve = lambda rule_name, msg: asyncio.sleep(0, result=module.ROutput(text="conversation whitelist allowed"))
+    plugin.resolver_service.resolve = lambda rule_name, msg: asyncio.sleep(
+        0, result=module.ROutput(text="conversation whitelist allowed")
+    )
     ev = FakeEvent("https://www.bilibili.com/video/BV1xx411c7mD")
     await plugin.rconsole_dispatch(ev)
     assert ev.sent and ev.sent[0]["text"] == "conversation whitelist allowed"
 
-    plugin = module.RConsolePlugin(module.Context(), {"conversation_whitelist": ["session-*"], "conversation_blacklist": ["stub-adapter:group:session-1"]})
+    plugin = module.RConsolePlugin(
+        module.Context(),
+        {"conversation_whitelist": ["session-*"], "conversation_blacklist": ["stub-adapter:group:session-1"]},
+    )
     ev = FakeEvent("https://www.bilibili.com/video/BV1xx411c7mD")
     await plugin.rconsole_dispatch(ev)
     assert ev.sent == [] and ev.stopped
 
     ctx = module.Context()
-    ctx.astrbot_config = {"platform_settings": {"enable_id_white_list": True, "id_whitelist": ["other-session"], "wl_ignore_admin_on_group": False, "wl_ignore_admin_on_friend": False}}
+    ctx.astrbot_config = {
+        "platform_settings": {
+            "enable_id_white_list": True,
+            "id_whitelist": ["other-session"],
+            "wl_ignore_admin_on_group": False,
+            "wl_ignore_admin_on_friend": False,
+        }
+    }
     plugin = module.RConsolePlugin(ctx, {})
     ev = FakeEvent("https://www.bilibili.com/video/BV1xx411c7mD", platform_name="aiocqhttp")
     await plugin.rconsole_dispatch(ev)
     assert ev.sent == [] and ev.stopped
 
     ctx = module.Context()
-    ctx.astrbot_config = {"platform_settings": {"enable_id_white_list": True, "id_whitelist": ["aiocqhttp:group:session-1"], "wl_ignore_admin_on_group": False, "wl_ignore_admin_on_friend": False}}
+    ctx.astrbot_config = {
+        "platform_settings": {
+            "enable_id_white_list": True,
+            "id_whitelist": ["aiocqhttp:group:session-1"],
+            "wl_ignore_admin_on_group": False,
+            "wl_ignore_admin_on_friend": False,
+        }
+    }
     plugin = module.RConsolePlugin(ctx, {})
     plugin.resolver_service.resolve = lambda rule_name, msg: asyncio.sleep(0, result=module.ROutput(text="白名单允许"))
     ev = FakeEvent("https://www.bilibili.com/video/BV1xx411c7mD", platform_name="aiocqhttp")
@@ -397,7 +459,7 @@ async def main():
     await plugin.rconsole_dispatch(ev)
     assert ev.sent == []
 
-    schema = json.loads((ROOT / "astrbot_plugin_rconsole" / "_conf_schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((ROOT / "_conf_schema.json").read_text(encoding="utf-8"))
     assert schema["conversation_whitelist"]["type"] == "list"
     assert schema["conversation_whitelist"]["default"] == []
     assert schema["conversation_blacklist"]["type"] == "list"
@@ -420,8 +482,16 @@ async def main():
         cfg = FakePluginConfig(td_path / "astrbot_plugin_rconsole_config.json")
         plugin = module.RConsolePlugin(module.Context(), cfg)
         plugin.bilibili_auth_service.auth_path = td_path / "bilibili_auth.json"
-        plugin.bilibili_auth_service.auth_path.write_text(json.dumps({"qrcode_key": "manual-key", "sessdata": "manual-autofill-sess"}, ensure_ascii=False), encoding="utf-8")
-        plugin.bilibili_auth_service.poll_status = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码登录成功。已保存到插件 data/bilibili_auth.json。\nCookie 字段：SESSDATA, bili_jct"))
+        plugin.bilibili_auth_service.auth_path.write_text(
+            json.dumps({"qrcode_key": "manual-key", "sessdata": "manual-autofill-sess"}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        plugin.bilibili_auth_service.poll_status = lambda: asyncio.sleep(
+            0,
+            result=module.ROutput(
+                text="B站扫码登录成功。已保存到插件 data/bilibili_auth.json。\nCookie 字段：SESSDATA, bili_jct"
+            ),
+        )
         ev = FakeEvent("#rbs", admin=True)
         await plugin.rconsole_dispatch(ev)
         persisted = json.loads((td_path / "astrbot_plugin_rconsole_config.json").read_text(encoding="utf-8-sig"))
@@ -434,7 +504,9 @@ async def main():
         assert "manual-autofill-sess" not in ev.sent[0]["text"]
 
     ev = FakeEvent("#rbq", admin=True)
-    plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码登录已生成。", images=[str(Path(__file__).resolve())]))
+    plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(
+        0, result=module.ROutput(text="B站扫码登录已生成。", images=[str(Path(__file__).resolve())])
+    )
     await plugin.rconsole_dispatch(ev)
     assert ev.sent and ev.sent[0]["type"] == "chain" and "B站扫码登录" in getattr(ev.sent[0]["chain"][0], "text", "")
     assert plugin._bilibili_qr_poll_task is None
@@ -446,9 +518,19 @@ async def main():
         plugin._bilibili_qr_poll_interval = lambda: 0
         plugin._bilibili_qr_poll_timeout = lambda: 2
         plugin.bilibili_auth_service.auth_path = td_path / "bilibili_auth.json"
-        plugin.bilibili_auth_service.auth_path.write_text(json.dumps({"qrcode_key": "auto-key", "sessdata": "auto-autofill-sess"}, ensure_ascii=False), encoding="utf-8")
-        plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码登录已生成。", images=[str(Path(__file__).resolve())]))
-        plugin.bilibili_auth_service.poll_status = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码登录成功。已保存到插件 data/bilibili_auth.json。\nCookie 字段：SESSDATA, bili_jct"))
+        plugin.bilibili_auth_service.auth_path.write_text(
+            json.dumps({"qrcode_key": "auto-key", "sessdata": "auto-autofill-sess"}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(
+            0, result=module.ROutput(text="B站扫码登录已生成。", images=[str(Path(__file__).resolve())])
+        )
+        plugin.bilibili_auth_service.poll_status = lambda: asyncio.sleep(
+            0,
+            result=module.ROutput(
+                text="B站扫码登录成功。已保存到插件 data/bilibili_auth.json。\nCookie 字段：SESSDATA, bili_jct"
+            ),
+        )
         ev = FakeEvent("#rbq", admin=True)
         await plugin.rconsole_dispatch(ev)
         await asyncio.sleep(0.05)
@@ -465,8 +547,12 @@ async def main():
     plugin = module.RConsolePlugin(module.Context(), {"bilibili": {"qr_auto_poll": True}})
     plugin._bilibili_qr_poll_interval = lambda: 0
     plugin._bilibili_qr_poll_timeout = lambda: 0
-    plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码登录已生成。"))
-    plugin.bilibili_auth_service.poll_status = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码状态：未扫码，请继续扫码。"))
+    plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(
+        0, result=module.ROutput(text="B站扫码登录已生成。")
+    )
+    plugin.bilibili_auth_service.poll_status = lambda: asyncio.sleep(
+        0, result=module.ROutput(text="B站扫码状态：未扫码，请继续扫码。")
+    )
     ev = FakeEvent("#rbq", admin=True)
     await plugin.rconsole_dispatch(ev)
     await asyncio.sleep(0.05)
@@ -475,7 +561,9 @@ async def main():
     plugin = module.RConsolePlugin(module.Context(), {"bilibili": {"qr_auto_poll": True}})
     plugin._bilibili_qr_poll_interval = lambda: 5
     plugin._bilibili_qr_poll_timeout = lambda: 30
-    plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(0, result=module.ROutput(text="B站扫码登录已生成。"))
+    plugin.bilibili_auth_service.start_qr_login = lambda: asyncio.sleep(
+        0, result=module.ROutput(text="B站扫码登录已生成。")
+    )
     first = FakeEvent("#rbq", admin=True)
     await plugin.rconsole_dispatch(first)
     first_task = plugin._bilibili_qr_poll_task

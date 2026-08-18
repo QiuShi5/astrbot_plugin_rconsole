@@ -4,7 +4,7 @@
 > 目标是在 AstrBot 中复刻原 R 插件的命令入口、帮助菜单、查询工具、网易云点歌、链接解析入口、管理命令和深色卡片样式。
 
 - 作者：dsh
-- 仓库：http://172.18.95.4:6610/astrbot_plugin_rconsole.git
+- 仓库：https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 - 版本：0.3.11
 - 兼容 AstrBot：`>=4.14,<5`
 - 适配平台：aiocqhttp / qq_official / telegram / discord / satori
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 也可以直接从仓库安装（AstrBot WebUI 支持 Git/URL 安装时填写仓库地址）：
 
 ```text
-http://172.18.95.4:6610/astrbot_plugin_rconsole.git
+https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 ```
 
 ### 运行时依赖

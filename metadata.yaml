@@ -18,7 +18,7 @@ desc: |
   **安全**：不执行聊天内强制更新/任意删除/任意 shell；依赖账号或外部工具的能力给出明确提示与能力诊断。
 version: 0.3.11
 author: dsh
-repo: http://172.18.95.4:6610/astrbot_plugin_rconsole.git
+repo: https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 support_platforms:
   - aiocqhttp
   - qq_official
@@ -26,7 +26,7 @@ support_platforms:
   - discord
   - satori
 astrbot_version: ">=4.14,<5"
-social_link: https://github.com/zhiyu1998/rconsole-plugin
+social_link: https://github.com/QiuShi5
 tags:
   - 解析
   - 音乐

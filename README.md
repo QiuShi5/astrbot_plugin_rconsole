@@ -5,7 +5,7 @@
 
 - 作者：dsh
 - 仓库：https://github.com/QiuShi5/astrbot_plugin_rconsole.git
-- 版本：0.3.11
+- 版本：0.3.12
 - 兼容 AstrBot：`>=4.14,<5`
 
 ---

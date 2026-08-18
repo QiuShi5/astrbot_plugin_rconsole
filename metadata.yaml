@@ -16,7 +16,7 @@ desc: |
   **安装**：复制插件目录到 `data/plugins/`，执行 `pip install -r requirements.txt`，重载插件后在配置面板填写各平台 Cookie/API 即可。
 
   **安全**：不执行聊天内强制更新/任意删除/任意 shell；依赖账号或外部工具的能力给出明确提示与能力诊断。
-version: 0.3.11
+version: 0.3.12
 author: dsh
 repo: https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 astrbot_version: ">=4.14,<5"

@@ -4,7 +4,7 @@
 # FZB.ttf 或系统字体（见 services/card_renderer.py::_font），因此从发布归档中排除
 # 该字体以将发布包控制在 16MB 以内，同时保留 FZB.ttf（帮助/版本卡片核心字体）。
 # 该字体仍保留在 git 仓库中供直接克隆安装时使用。
-resources/font/江城月湖体 400W.ttf export-ignore
+resources/font/*400W.ttf export-ignore
 
 # 通用：发布归档中排除测试、运行缓存、敏感与本地文件
 tests/ export-ignore

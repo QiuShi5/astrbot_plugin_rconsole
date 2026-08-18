@@ -19,12 +19,6 @@ desc: |
 version: 0.3.11
 author: dsh
 repo: https://github.com/QiuShi5/astrbot_plugin_rconsole.git
-support_platforms:
-  - aiocqhttp
-  - qq_official
-  - telegram
-  - discord
-  - satori
 astrbot_version: ">=4.14,<5"
 social_link: https://github.com/QiuShi5
 tags:

@@ -7,7 +7,6 @@
 - 仓库：https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 - 版本：0.3.11
 - 兼容 AstrBot：`>=4.14,<5`
-- 适配平台：aiocqhttp / qq_official / telegram / discord / satori
 
 ---
 

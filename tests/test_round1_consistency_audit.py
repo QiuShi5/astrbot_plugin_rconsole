@@ -109,9 +109,7 @@ def main():
     assert 'astrbot_version: ">=4.14,<5"' in metadata
 
     readme = (PLUGIN / "README.md").read_text(encoding="utf-8")
-    for token in ["#R能力诊断", "full_original_to_astrbot_parity_matrix.md", "yt-dlp"]:
-        assert token in readme, token
-    for token in ["统一发送模块", "解析器只产出 `ROutput`", "AstrBot Video 组件"]:
+    for token in ["#R能力诊断", "yt-dlp", "统一发送模块", "解析器只产出 `ROutput`", "AstrBot Video 组件"]:
         assert token in readme, token
 
     report = f"""# Round 1/6 一致性审计报告

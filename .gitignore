@@ -10,3 +10,6 @@ data/song_search_cache.json
 data/cloud_song_cache.json
 data/temp/
 data/rendered/
+docs/
+astrbot_plugin_compliance_checklist.md
+rconsole_original_report.md

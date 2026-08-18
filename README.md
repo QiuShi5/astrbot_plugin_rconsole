@@ -186,7 +186,7 @@ http://172.18.95.4:6610/astrbot_plugin_rconsole.git
 - 版本卡片：深色版本卡、标题栏、更新项列表（版本卡片数据复刻原版 R 插件的 `resources/config/version.yaml`，展示的是原版版本号与更新日志）
 - 点歌列表：网易云深色列表、序号、封面、歌手、时长、播客/云盘标签
 
-样式对照记录见 `docs/style_replication_report.md`、`docs/visual_comparison_report.md` 与 `docs/style_quantitative_check.json`。
+样式复刻基于原 R 插件的 HTML/CSS/字体/图标资源（`resources/`），核心聊天图片用 Pillow 渲染。
 
 ---
 
@@ -220,7 +220,6 @@ astrbot_plugin_rconsole/
     html/                  # 6 套原 HTML/CSS 模板
     img/                   # 30 个平台图标 + 默认图
     font/                  # FZB.ttf、江城月湖体
-  docs/                    # 开发/合规/样式/验证文档与对照矩阵
   tests/                   # 沙箱测试脚本
   data/                    # 运行时数据（写入 AstrBot 持久化目录；迁移旧数据用）
 ```
@@ -264,7 +263,7 @@ data/plugin_data/astrbot_plugin_rconsole/
 - `tests/test_style_quantitative.py`：样式量化检查
 - `tests/test_persistent_data_path.py`：持久化路径
 - `tests/test_capability_probe.py`、`tests/test_runtime_adapter_probe.py`：能力/运行时探针
-- `tests/generate_full_parity_matrix.py`：自动生成原插件→AstrBot 规则对照矩阵（输出见 `docs/full_original_to_astrbot_parity_matrix.md`）
+- `tests/generate_full_parity_matrix.py`：自动生成原插件→AstrBot 规则对照矩阵（运行 `python tests/generate_full_parity_matrix.py` 生成）
 
 在无完整 AstrBot 运行环境时：
 
@@ -275,8 +274,6 @@ python tests/test_astrbot_stub_e2e.py
 ```
 
 真实 WebUI/适配器端到端加载需要在你的 AstrBot 实例中验证；`#R能力诊断` 可辅助检查前置条件。
-
-完整开发规范整理见 `docs/astrbot_plugin_dev_notes.md`；合规差距与改造控制文档见 `docs/compliance_gap_report.md` 与 `docs/改造控制文档.md`。
 
 ---
 

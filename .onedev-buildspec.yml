@@ -1,0 +1,67 @@
+version: 52
+jobs:
+- name: up-github
+  steps:
+  - type: CheckoutStep
+    name: 检出代码
+    cloneCredential:
+      type: DefaultCredential
+    withLfs: false
+    withSubmodules: false
+    condition: SUCCESSFUL
+    optional: false
+  - type: CommandStep
+    name: up-github
+    runInContainer: true
+    image: alpine/git:2.45.2
+    interpreter:
+      type: ShellInterpreter
+      shell: /bin/sh
+      commands: |
+        set -eu
+
+        askpass="$(mktemp)"
+        trap 'rm -f "$askpass"' EXIT
+
+        cat > "$askpass" <<'EOF'
+        #!/bin/sh
+        case "$1" in
+          *Username*) printf '%s\n' 'x-access-token' ;;
+          *Password*) printf '%s\n' "$GITHUB_MIRROR_TOKEN" ;;
+        esac
+        EOF
+
+        chmod 700 "$askpass"
+        export GIT_ASKPASS="$askpass"
+        export GIT_TERMINAL_PROMPT=0
+
+        git remote remove github 2>/dev/null || true
+        git remote add github https://github.com/QiuShi5/astrbot_plugin_nexus_prime.git
+        git fetch --force --tags origin
+
+        # OneDev needs this file, but GitHub must never receive it. Rewrite the
+        # job-local mirror history before every GitHub push.
+        FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force \
+          --index-filter 'git rm --cached --ignore-unmatch .onedev-buildspec.yml' \
+          --prune-empty \
+          --tag-name-filter cat \
+          -- --all
+
+        git push --force github HEAD:refs/heads/main
+        git push --force github --tags
+    runAs: 0:0
+    envVars:
+    - name: GITHUB_MIRROR_TOKEN
+      value: '@secret:github_mirror_token@'
+    useTTY: false
+    condition: SUCCESSFUL
+    optional: false
+  triggers:
+  - type: BranchUpdateTrigger
+    branches: master
+    userMatch: anyone
+    projects: astrbot_plugin_nexus_prime
+  retryCondition: never
+  maxRetries: 3
+  retryDelay: 30
+  timeout: 14400

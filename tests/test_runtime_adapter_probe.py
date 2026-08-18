@@ -49,6 +49,7 @@ def main():
         result["adapter_runtime_requirement"] = (
             "真实 AstrBot 运行时缺失：本探针需在已安装 AstrBot 的环境中运行以验证组件 API 签名。"
         )
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print("RUNTIME_ADAPTER_PROBE_OK" if result.get("real_astrbot_api") else "RUNTIME_ADAPTER_PROBE_SKIPPED_NO_ASTRBOT")
     print(json.dumps(result, ensure_ascii=False, indent=2)[:2000])

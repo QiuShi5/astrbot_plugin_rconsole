@@ -144,6 +144,7 @@ def main():
                 else "无沙箱内阻塞",
             }
         )
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     lines = [
         "# 原 R 插件 → AstrBot 版完整逐规则功能矩阵",
@@ -169,6 +170,7 @@ def main():
         "- 平台无关功能已实现并通过单元/stub/样式/媒体解析测试。",
         "- 必须依赖真实账号、扫码二维码、Cookie、群文件/群语音或具体适配器的能力标记为“环境依赖/入口完整”，不伪造成功；插件保留入口、配置与安全提示，并通过能力探针报告说明可验证条件。",
     ]
+    OUT_MD.parent.mkdir(parents=True, exist_ok=True)
     OUT_MD.write_text("\n".join(lines), encoding="utf-8")
     print("FULL_PARITY_MATRIX_OK")
     print("rules", len(rows))

@@ -151,6 +151,7 @@ Round 1 未发现规则缺失、矩阵错位、metadata/schema/README 关键不�
 
 Round 2 将继续逐模块深审业务实现质量，重点检查：查询/点歌/链接解析/权限/能力诊断是否存在实际逻辑 bug、异常处理不足或可优化点。
 """
+    REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(report, encoding="utf-8")
     print("ROUND1_CONSISTENCY_AUDIT_OK")
     print("source_counts", source_counts)

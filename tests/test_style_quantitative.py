@@ -93,6 +93,7 @@ def main():
             "rendered_sizes": {k: list(v) for k, v in sizes.items()},
         }
         out = ROOT / "docs/style_quantitative_check.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(expected, ensure_ascii=False, indent=2), encoding="utf-8")
         print("style quantitative checks ok")
         print(json.dumps(expected, ensure_ascii=False, indent=2))

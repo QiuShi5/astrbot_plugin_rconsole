@@ -236,7 +236,7 @@ async def main():
     module = importlib.import_module("astrbot_plugin_rconsole.main")
     plugin = module.RConsolePlugin(module.Context(), {"netease": {"song_request_max_list": 3}})
 
-    assert len(plugin.rules) == 46
+    assert len(plugin.rules) == 52
 
     ev = FakeEvent("#R帮助")
     await plugin.rconsole_dispatch(ev)

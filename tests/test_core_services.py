@@ -13,12 +13,13 @@ from services.translate import TranslateService
 
 
 def _network_available(timeout: float = 4.0) -> bool:
-    """True when outbound HTTP is reachable from this environment."""
-    import urllib.request
+    """True when outbound TCP is reachable from this environment."""
+    import socket
 
+    socket.setdefaulttimeout(timeout)
     try:
-        urllib.request.urlopen("https://example.com", timeout=timeout)
-        return True
+        with socket.create_connection(("1.1.1.1", 443), timeout=timeout):
+            return True
     except Exception:
         return False
 

@@ -31,6 +31,14 @@ class StateService:
         self.save_state(data)
         return bool(data["oversea"])
 
+    def get_value(self, key: str, default: Any = "") -> Any:
+        return self.get_state().get(key, default)
+
+    def set_value(self, key: str, value: Any) -> None:
+        data = self.get_state()
+        data[key] = value
+        self.save_state(data)
+
     def whitelist(self) -> list[str]:
         data = read_json(self.whitelist_path, [])
         return [str(x) for x in data] if isinstance(data, list) else []

@@ -71,6 +71,12 @@ class RConsolePlugin(Star):
             douyin_duration=int(get_config_value(config, "douyin.duration", 480) or 480),
             xiaohongshu_cookie=self._xiaohongshu_cookie(),
             download_timeout=int(get_config_value(config, "video_download_timeout", 60) or 60),
+            bili_comments=bool(get_config_value(config, "bilibili.comments", False)),
+            bili_comment_count=int(get_config_value(config, "bilibili.comment_count", 5) or 5),
+            douyin_comments=bool(get_config_value(config, "douyin.comments", False)),
+            douyin_comment_count=int(get_config_value(config, "douyin.comment_count", 5) or 5),
+            weibo_comments=bool(get_config_value(config, "cookies.weibo_comments", False)),
+            weibo_comment_count=int(get_config_value(config, "cookies.weibo_comment_count", 5) or 5),
         )
         self.help_version_service = HelpVersionService(self.resources_dir, output_dir=self.data_dir / "rendered")
         self.netease_service = NeteaseService(
@@ -212,6 +218,9 @@ class RConsolePlugin(Star):
             "tiktok",
             "bili",
             "twitter_x",
+            "instagram",
+            "kugou",
+            "weixin_channel",
             "acfun",
             "xhs",
             "bodian",
@@ -242,6 +251,9 @@ class RConsolePlugin(Star):
             "tiktok": {"tiktok", "TikTok"},
             "bili": {"bili", "哔哩哔哩", "B站", "bilibili"},
             "twitter_x": {"twitter", "x", "Twitter", "Twitter/X"},
+            "instagram": {"instagram", "Instagram", "IG", "ins"},
+            "kugou": {"kugou", "酷狗", "酷狗音乐"},
+            "weixin_channel": {"weixin_channel", "微信视频号", "视频号", "sph"},
             "acfun": {"acfun", "Acfun", "AcFun"},
             "xhs": {"xhs", "小红书"},
             "youtube": {"youtube", "YouTube"},
@@ -594,6 +606,13 @@ class RConsolePlugin(Star):
             ("get_whitelist", r"^#R信任用户$", "handle_switcher", "admin", "apps/switchers.js"),
             ("search_whitelist", r"^#查询R信任用户(.*)", "handle_switcher", "admin", "apps/switchers.js"),
             ("delete_whitelist", r"^#删除R信任用户(.*)", "handle_switcher", "admin", "apps/switchers.js"),
+            (
+                "set_weixin_channel_cookie",
+                r"^#设置视频号[Cc]ookie\s*(.*)$",
+                "handle_switcher",
+                "admin",
+                "apps/switchers.js",
+            ),
             ("trans", r"^(翻|trans)[中日文英俄韩]", "handle_tool", "user", "apps/tools.js"),
             (
                 "douyin",
@@ -621,13 +640,28 @@ class RConsolePlugin(Star):
             ),
             (
                 "twitter_x",
-                r"https?:\/\/x\.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]*)",
+                r"https?:\/\/([xr]|twitter)\.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]*)",
                 "handle_tool",
                 "user",
                 "apps/tools.js",
             ),
+            (
+                "instagram",
+                r"https?:\/\/(www\.)?instagram\.com\/(p|reel|reels)\/",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
+            (
+                "kugou",
+                r"(t1\.kugou\.com|m\.kugou\.com/share/song\.html|www\.kugou\.com/share/|h5\.kugou\.com)",
+                "handle_tool",
+                "user",
+                "apps/tools.js",
+            ),
+            ("weixin_channel", r"(weixin\.qq\.com/sph/)", "handle_tool", "user", "apps/tools.js"),
             ("acfun", r"(acfun\.cn|^ac[0-9]{8}$)", "handle_tool", "user", "apps/tools.js"),
-            ("xhs", r"(xhslink\.com|xiaohongshu\.com)", "handle_tool", "user", "apps/tools.js"),
+            ("xhs", r"(xhslink\.(com|cn)|xiaohongshu\.com)", "handle_tool", "user", "apps/tools.js"),
             ("bodian", r"(h5app\.kuwo\.cn)", "handle_tool", "user", "apps/tools.js"),
             (
                 "general",
@@ -671,6 +705,8 @@ class RConsolePlugin(Star):
                 "apps/tools.js",
             ),
             ("netease_scan", r"^#(rnq|RNQ|rncq|RNCQ)$", "handle_tool", "admin", "apps/tools.js"),
+            ("kugou_status", r"^#(酷狗状态|rks|RKS)$", "handle_tool", "admin", "apps/tools.js"),
+            ("kugou_scan", r"^#(rkq|RKQ)$", "handle_tool", "admin", "apps/tools.js"),
             ("version", r"^#*R(插件)?版本$", "handle_version", "user", "apps/update.js"),
         ]
         return [
@@ -737,12 +773,20 @@ class RConsolePlugin(Star):
         if rule.name == "delete_whitelist":
             user_id = msg.replace("#删除R信任用户", "", 1).strip() or self._sender_id(event)
             return ROutput(text=self.state.remove_whitelist(user_id)[1])
+        if rule.name == "set_weixin_channel_cookie":
+            cookie = msg.replace("#设置视频号Cookie", "", 1).replace("#设置视频号cookie", "", 1).strip()
+            if not cookie:
+                return ROutput(
+                    text="用法：#设置视频号Cookie <cookie>\n未提供 Cookie。获取方法：浏览器登录 https://yuanbao.tencent.com 后 F12 → Network → 任意请求 → Request Headers → Cookie"
+                )
+            self.state.set_value("weixin_channel_cookie", cookie)
+            return ROutput(text="已保存微信视频号 Cookie 到插件数据（state.json）。部分场景需重载插件后生效。")
         return ROutput(text="未知开关功能")
 
     async def handle_tool(self, event: AstrMessageEvent, msg: str, rule: RuleSpec) -> ROutput:
         if rule.name == "trans":
             return await self.translate_service.translate(msg)
-        if rule.name in {"netease_status", "netease_scan"}:
+        if rule.name in {"netease_status", "netease_scan", "kugou_status", "kugou_scan"}:
             return self.capability_service.probe(event)
         if rule.name == "bili_scan":
             output = await self.bilibili_auth_service.start_qr_login()

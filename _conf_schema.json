@@ -120,7 +120,9 @@
       "bangumi_duration": {"description": "番剧最大时长（秒）", "type": "int", "default": 1800},
       "smart_resolution": {"description": "智能分辨率", "type": "bool", "default": false},
       "file_size_limit": {"description": "智能分辨率文件大小限制 MB", "type": "int", "default": 100},
-      "min_resolution": {"description": "智能分辨率最低画质（0=8K ~ 10=360P）", "type": "int", "default": 10, "options": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+      "min_resolution": {"description": "智能分辨率最低画质（0=8K ~ 10=360P）", "type": "int", "default": 10, "options": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+      "comments": {"description": "是否显示B站评论", "type": "bool", "default": false},
+      "comment_count": {"description": "B站评论展示数量", "type": "int", "default": 5}
     }
   },
   "netease": {
@@ -149,6 +151,7 @@
       "compression": {"description": "是否使用压缩视频格式", "type": "bool", "default": true},
       "display_cover": {"description": "是否显示封面", "type": "bool", "default": true},
       "comments": {"description": "是否显示评论", "type": "bool", "default": false},
+      "comment_count": {"description": "抖音评论展示数量", "type": "int", "default": 5},
       "music": {"description": "是否解析背景音乐", "type": "bool", "default": true},
       "bgm_send_type": {"description": "BGM 发送方式", "type": "string", "default": "voice", "options": ["voice", "card"]}
     }
@@ -173,6 +176,7 @@
       "weibo": {"description": "微博 Cookie", "type": "text", "default": ""},
       "weibo_display_source_link": {"description": "微博解析文案是否显示原始链接", "type": "bool", "default": false},
       "weibo_comments": {"description": "是否显示微博评论", "type": "bool", "default": true},
+      "weibo_comment_count": {"description": "微博评论展示数量", "type": "int", "default": 5},
       "xiaoheihe": {"description": "小黑盒 Cookie", "type": "text", "default": ""},
       "xiaoheihe_display_source_link": {"description": "小黑盒解析文案是否显示原始链接", "type": "bool", "default": false}
     }

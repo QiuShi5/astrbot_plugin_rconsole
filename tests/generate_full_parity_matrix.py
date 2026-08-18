@@ -4,8 +4,8 @@ import ast
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-PLUGIN = ROOT / "astrbot_plugin_rconsole"
+ROOT = Path(__file__).resolve().parents[1]
+PLUGIN = ROOT
 OUT_MD = ROOT / "docs/full_original_to_astrbot_parity_matrix.md"
 OUT_JSON = ROOT / "docs/full_original_to_astrbot_parity_matrix.json"
 
@@ -79,6 +79,16 @@ FEATURES = {
     "xiaoheihe": ("小黑盒", "yt-dlp/OpenGraph fallback", "resolver code path"),
     "netease_status": ("网易云状态", "配置驱动状态提示；扫码需真实交互", "stub e2e + code path"),
     "netease_scan": ("网易云扫码", "入口保留；需二维码交互与 Cookie 写入授权", "stub e2e + config schema"),
+    "set_weixin_channel_cookie": (
+        "设置视频号Cookie",
+        "通过 StateService 持久化腾讯元宝 Cookie 到 state.json",
+        "stub e2e + code path",
+    ),
+    "instagram": ("Instagram 解析", "OpenGraph/meta 预览；需海外网络/代理", "resolver code path"),
+    "kugou": ("酷狗音乐解析", "OpenGraph/meta 预览", "resolver code path"),
+    "weixin_channel": ("微信视频号解析", "OpenGraph/meta 预览；完整解析需元宝 Cookie", "resolver code path"),
+    "kugou_status": ("酷狗状态", "配置驱动状态提示（capability probe 含酷狗 Cookie）", "stub e2e + code path"),
+    "kugou_scan": ("酷狗扫码", "入口保留；需二维码交互与 Cookie 写入授权", "stub e2e + config schema"),
     "version": ("版本卡片", "原 version YAML + Pillow 图片复刻", "test_core_services.py, test_style_quantitative.py"),
 }
 
@@ -111,7 +121,7 @@ def status_for(name):
 
 def main():
     rows = extract_rules()
-    assert len(rows) == 46, len(rows)
+    assert len(rows) == 52, len(rows)
     missing = [r[0] for r in rows if r[0] not in FEATURES]
     assert not missing, missing
     data = []

@@ -100,12 +100,22 @@ https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 | `#我的云盘` / `#rnc` | 保留入口（需 Cookie 与平台文件能力） |
 | `#上传云盘` / `#rnu` | 保留入口，安全降级 |
 
+### 酷狗音乐
+
+| 命令 | 功能 |
+|---|---|
+| 酷狗分享链接（t1/m/share/h5） | 自动识别并解析酷狗音乐（OpenGraph 预览） |
+| `#酷狗状态` / `#rks` | 酷狗 Cookie 配置状态提示 |
+| `#rkq` / `#RKQ` | 酷狗扫码登录入口（能力诊断提示） |
+
 ### Bilibili
 
 | 命令 | 功能 | 权限 |
 |---|---|---|
 | `#rbq` / `#RBQ` | 生成 B 站扫码登录二维码，并自动轮询扫码状态，成功/失败/过期/超时都会回调；登录成功后自动写入插件配置 | 管理员 |
 | `#rbs` / `#RBS` | 手动查询最近一次二维码扫码状态；成功后保存 Cookie 到插件数据目录 | 管理员 |
+
+B 站视频解析支持按配置 `bilibili.comments` 附带评论（纯文本，`bilibili.comment_count` 控制条数，默认 5）。
 
 ### 管理命令（管理员）
 
@@ -114,6 +124,7 @@ https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 | `#设置海外解析` | 切换海外解析状态 |
 | `清理垃圾` | 清理插件受控临时目录（仅限插件自己的 `data/temp`） |
 | `#设置R信任用户 QQ号` / `#R信任用户` / `#查询R信任用户 QQ号` / `#删除R信任用户 QQ号` | R 信任用户白名单管理 |
+| `#设置视频号Cookie <cookie>` | 保存微信视频号（腾讯元宝）Cookie，用于视频号解析 |
 
 ### 链接解析入口（所有用户）
 
@@ -130,6 +141,9 @@ https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 - 米游社
 - 网易云音乐
 - 微博 / 微视 / 最右
+- Instagram（需海外网络/代理，OpenGraph 预览）
+- 酷狗音乐 / 酷狗状态 / 酷狗扫码
+- 微信视频号
 - Apple Music / Spotify
 - QQ 音乐 / 汽水音乐
 - Telegram / 贴吧 / 小黑盒
@@ -165,12 +179,12 @@ https://github.com/QiuShi5/astrbot_plugin_rconsole.git
 | `queue_concurrency` / `video_download_concurrency` | 下载队列并发数 / 视频下载线程数 |
 | `autoclear_cron` | 自动清理时间（沿用 R 插件 cron 语义） |
 | `proxy_addr` / `proxy_port` / `force_overseas_server` | 海外平台代理 |
-| `bilibili` | B 站 SESSDATA、扫码轮询、画质、封面/简介/总结、是否显示原始链接；顶层 `bilibili_sessdata` 为兼容字段 |
+| `bilibili` | B 站 SESSDATA、扫码轮询、画质、封面/简介/总结、是否显示原始链接、`comments`/`comment_count` 评论开关；顶层 `bilibili_sessdata` 为兼容字段 |
 | `netease` | 网易云 API、Cookie、音质、点歌数量等 |
-| `douyin` | 抖音 Cookie、时长、封面、评论、BGM 策略 |
+| `douyin` | 抖音 Cookie、时长、封面、`comments`/`comment_count` 评论开关、BGM 策略 |
 | `youtube` | YouTube 画质、时长、Cookie 路径 |
 | `ytdlp` | 通用媒体解析模式：`off` 关闭 / `metadata` 仅信息 / `direct` 提取直链 / `download` 下载到临时目录；`enabled` 总开关 |
-| `cookies` | 小红书、微博、小黑盒等平台 Cookie |
+| `cookies` | 小红书、微博、小黑盒等平台 Cookie；`weibo_comments`/`weibo_comment_count` 控制微博评论展示 |
 | `ai` | OpenAI-compatible 总结配置（base_url / api_key / model） |
 
 配置字段命名保持稳定，避免后续版本重命名导致用户已填写配置丢失。新版 AstrBot 会自动为缺失配置项补默认值、移除已删除项。

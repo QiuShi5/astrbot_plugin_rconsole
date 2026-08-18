@@ -19,8 +19,8 @@ EXPECTED_SOURCE_MODULES = {
     "apps/help.js": 1,
     "apps/query.js": 5,
     "apps/songRequest.js": 7,
-    "apps/switchers.js": 6,
-    "apps/tools.js": 26,
+    "apps/switchers.js": 7,
+    "apps/tools.js": 31,
     "apps/update.js": 1,
 }
 
@@ -61,8 +61,8 @@ def main():
 
     source_counts = source_rule_count()
     assert main_counts == EXPECTED_SOURCE_MODULES, main_counts
-    assert len(main_rules) == 46
-    assert len({r[0] for r in main_rules}) == 46, "rule names must be unique"
+    assert len(main_rules) == 52
+    assert len({r[0] for r in main_rules}) == 52, "rule names must be unique"
     assert all(re.compile(r[1]) for r in main_rules)
 
     matrix_path = DOCS / "full_original_to_astrbot_parity_matrix.json"

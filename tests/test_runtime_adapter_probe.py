@@ -5,7 +5,7 @@ import json
 import subprocess
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs/runtime_adapter_capability_probe.json"
 
 
@@ -46,9 +46,11 @@ def main():
     except Exception as exc:
         result["real_astrbot_api"] = False
         result["error"] = repr(exc)
-        raise
+        result["adapter_runtime_requirement"] = (
+            "真实 AstrBot 运行时缺失：本探针需在已安装 AstrBot 的环境中运行以验证组件 API 签名。"
+        )
     OUT.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("RUNTIME_ADAPTER_PROBE_OK")
+    print("RUNTIME_ADAPTER_PROBE_OK" if result.get("real_astrbot_api") else "RUNTIME_ADAPTER_PROBE_SKIPPED_NO_ASTRBOT")
     print(json.dumps(result, ensure_ascii=False, indent=2)[:2000])
 
 

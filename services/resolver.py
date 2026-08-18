@@ -59,6 +59,12 @@ class ResolverService:
         douyin_duration: int = 480,
         xiaohongshu_cookie: str = "",
         download_timeout: int = 60,
+        bili_comments: bool = False,
+        bili_comment_count: int = 5,
+        douyin_comments: bool = False,
+        douyin_comment_count: int = 5,
+        weibo_comments: bool = False,
+        weibo_comment_count: int = 5,
     ):
         temp = temp_dir or Path("data/temp")
         self.media = YtDlpService(temp, mode=ytdlp_mode, max_filesize_mb=max_filesize_mb, proxy=proxy)
@@ -68,6 +74,12 @@ class ResolverService:
         self.douyin_cookie = douyin_cookie.strip()
         self.douyin_duration = int(douyin_duration or 480)
         self.xiaohongshu_cookie = xiaohongshu_cookie.strip()
+        self.bili_comments = bool(bili_comments)
+        self.bili_comment_count = int(bili_comment_count or 5)
+        self.douyin_comments = bool(douyin_comments)
+        self.douyin_comment_count = int(douyin_comment_count or 5)
+        self.weibo_comments = bool(weibo_comments)
+        self.weibo_comment_count = int(weibo_comment_count or 5)
 
     async def resolve(self, rule_name: str, msg: str) -> ROutput:
         method = getattr(self, f"resolve_{rule_name}", None)
@@ -112,6 +124,9 @@ class ResolverService:
             "miyoushe": "米游社",
             "netease": "网易云音乐",
             "weibo": "微博",
+            "instagram": "Instagram",
+            "kugou": "酷狗音乐",
+            "weixin_channel": "微信视频号",
             "weishi": "微视",
             "zuiyou": "最右",
             "freyr": "Apple Music / Spotify",
@@ -228,6 +243,10 @@ class ResolverService:
             if not item:
                 raise ValueError(f"接口未返回 aweme_detail：{truncate(str(data), 240)}")
             output = self._format_douyin_item(item, final_url or url)
+            if self.douyin_comments and detail_id:
+                comments = await self.fetch_douyin_comments(detail_id, self.douyin_comment_count)
+                if comments:
+                    output.text += "\n💬 评论：\n" + "\n".join(comments)
             LOGGER.info(
                 "R插件抖音官方接口解析成功：detail_id=%s images=%d videos=%d audios=%d",
                 detail_id,
@@ -420,7 +439,82 @@ class ResolverService:
             elif native.text:
                 extra = "\n" + native.text
                 LOGGER.warning("R插件B站官方playurl fallback未产出视频：bvid=%s text=%s", bvid, native.text)
-        return ROutput(text=text + extra, images=[pic] if pic else [], videos=videos)
+        comments_extra = ""
+        if self.bili_comments and cid:
+            comments = await self.fetch_bili_comments(cid, self.bili_comment_count)
+            if comments:
+                comments_extra = "\n💬 评论：\n" + "\n".join(comments)
+        return ROutput(text=text + extra + comments_extra, images=[pic] if pic else [], videos=videos)
+
+    async def fetch_bili_comments(self, oid: str | int, limit: int = 5) -> list[str]:
+        """Fetch Bilibili comments as plain text (public reply API, no login needed)."""
+        try:
+            url = "https://api.bilibili.com/x/v2/reply?" + urllib.parse.urlencode(
+                {"type": 1, "oid": oid, "pn": 1, "ps": int(limit or 5), "sort": 2}
+            )
+            data = await request_json(url, headers=self._bili_headers("https://www.bilibili.com/"), timeout=15)
+            replies = (data.get("data") or {}).get("replies") or []
+            result = []
+            for r in replies[:limit]:
+                member = (r.get("member") or {}).get("uname") or "未知用户"
+                content = r.get("content") or {}
+                msg = content.get("message") if isinstance(content, dict) else ""
+                if msg:
+                    result.append(f"{member}：{strip_html(str(msg))}")
+            return result
+        except Exception as exc:
+            LOGGER.warning("R插件B站评论拉取失败 oid=%s: %s", oid, exc)
+            return []
+
+    async def fetch_douyin_comments(self, aweme_id: str | int, limit: int = 5) -> list[str]:
+        """Fetch Douyin comments as plain text. Requires a valid douyin.cookie; otherwise returns []."""
+        if not self.douyin_cookie:
+            return []
+        try:
+            url = "https://www.douyin.com/aweme/v1/web/comment/list/?" + urllib.parse.urlencode(
+                {
+                    "aweme_id": aweme_id,
+                    "cursor": 0,
+                    "count": int(limit or 5),
+                    "device_platform": "webapp",
+                    "aid": "6383",
+                }
+            )
+            data = await request_json(url, headers=self._douyin_headers(), timeout=20)
+            comments = (data.get("comments") or []) if isinstance(data, dict) else []
+            result = []
+            for c in comments[:limit]:
+                user = (c.get("user") or {}).get("nickname") or "未知用户"
+                text = str(c.get("text") or "")
+                if text:
+                    result.append(f"{user}：{strip_html(text)}")
+            return result
+        except Exception as exc:
+            LOGGER.warning("R插件抖音评论拉取失败 aweme_id=%s: %s", aweme_id, exc)
+            return []
+
+    async def fetch_weibo_comments(self, id_or_url: str, limit: int = 5) -> list[str]:
+        """Fetch Weibo comments as plain text via the public comment API (best effort)."""
+        try:
+            # mid extraction: numeric or from a weibo.com URL
+            mid = re.sub(r"^.*?\D(\d{10,})$", r"\1", str(id_or_url))
+            if not mid or not mid.isdigit():
+                return []
+            url = "https://weibo.com/ajax/statuses/buildComments?" + urllib.parse.urlencode(
+                {"flow": 0, "is_reload": 1, "id": mid, "is_show_bulletin": 2, "max_id": 0, "count": int(limit or 5)}
+            )
+            data = await request_json(url, timeout=20)
+            comments = data.get("data") or []
+            result = []
+            for c in comments[:limit]:
+                user = (c.get("user") or {}).get("screen_name") or "未知用户"
+                text = str(c.get("text") or "")
+                if text:
+                    result.append(f"{user}：{strip_html(text)}")
+            return result
+        except Exception as exc:
+            LOGGER.warning("R插件微博评论拉取失败 id=%s: %s", id_or_url, exc)
+            return []
 
     def _format_bili_native_text(self, *, title: str, desc: str, stat: dict[str, Any]) -> str:
         """Format ordinary Bilibili video text like the original R plugin."""
@@ -528,7 +622,21 @@ class ResolverService:
             return ""
 
     async def resolve_weibo(self, msg: str) -> ROutput:
-        return await self.resolve_opengraph("weibo", msg)
+        output = await self.resolve_opengraph("weibo", msg)
+        if self.weibo_comments:
+            comments = await self.fetch_weibo_comments(msg, self.weibo_comment_count)
+            if comments:
+                output.text += "\n💬 评论：\n" + "\n".join(comments)
+        return output
+
+    async def resolve_instagram(self, msg: str) -> ROutput:
+        return await self.resolve_opengraph("instagram", msg)
+
+    async def resolve_kugou(self, msg: str) -> ROutput:
+        return await self.resolve_opengraph("kugou", msg)
+
+    async def resolve_weixin_channel(self, msg: str) -> ROutput:
+        return await self.resolve_opengraph("weixin_channel", msg)
 
     async def resolve_xhs(self, msg: str) -> ROutput:
         url = self._extract_xhs_url(msg)

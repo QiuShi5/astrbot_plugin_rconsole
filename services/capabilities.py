@@ -92,6 +92,13 @@ class CapabilityService:
         )
         items.append(
             CapabilityItem(
+                "酷狗 Cookie",
+                bool(get_config_value(self.config, "kugou.cookie", "")),
+                "已配置" if get_config_value(self.config, "kugou.cookie", "") else "未配置，会员/受限歌曲与扫码不可用",
+            )
+        )
+        items.append(
+            CapabilityItem(
                 "ffmpeg", shutil.which("ffmpeg") is not None, shutil.which("ffmpeg") or "未安装；语音转码不可执行"
             )
         )
